@@ -7,7 +7,7 @@ import processing.serial.Serial;
 
 public class AdcMonitor extends PApplet {
 
-    // The serial port:
+    // The serial port
     Serial arduinoPort;
     Thread serialThread;
 
@@ -190,7 +190,7 @@ public class AdcMonitor extends PApplet {
                 @Override
                 public void run() {
                     while (true) {
-                        dataSet.addSample(sin(number++ / (4 * PI)));
+                        dataSet.addSample(sin(number++ / (8 * PI)));
                         delay(50);
                     }
                 }

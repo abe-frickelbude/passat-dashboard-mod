@@ -16,6 +16,7 @@
 		<commons-lang.version>3.7</commons-lang.version>
 		<commons-collections4.version>4.1</commons-collections4.version>
 		<processing.version>3.3.6</processing.version>
+		<processing.basedir>f:/java_toolbox/processing-3.3.6</processing.basedir>
 	</properties>
 
 	<dependencies>
@@ -35,19 +36,42 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.processing</groupId>
-			<artifactId>core</artifactId>
-			<version>${processing.version}</version>
+			<groupId>org.jogamp.jogl</groupId>
+			<artifactId>jogl-all</artifactId>
+			<version>2.3.2</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jogamp.jogl</groupId>
+			<artifactId>jogl</artifactId>
+			<version>2.3.2</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jogamp.gluegen</groupId>
+			<artifactId>gluegen-rt-main</artifactId>
+			<version>2.3.2</version>
 			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.processing</groupId>
+			<artifactId>core</artifactId>
+			<version>${processing.version}</version>
+			<scope>system</scope>
+			<systemPath>${processing.basedir}/core/library/core.jar</systemPath>
+		</dependency>
+		
+			<dependency>
+			<groupId>org.processing</groupId>
 			<artifactId>serial</artifactId>
 			<version>${processing.version}</version>
-			<scope>compile</scope>
+			<scope>system</scope>
+			<systemPath>${processing.basedir}/modes/java/libraries/serial/library/serial.jar</systemPath>
 		</dependency>
-
+		
 	</dependencies>
 
 	<build>
