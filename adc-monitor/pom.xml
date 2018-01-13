@@ -36,6 +36,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>net.sf.jchart2d</groupId>
+			<artifactId>jchart2d</artifactId>
+			<version>3.3.2</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.jogamp.jogl</groupId>
 			<artifactId>jogl-all</artifactId>
 			<version>2.3.2</version>
@@ -63,15 +69,15 @@
 			<scope>system</scope>
 			<systemPath>${processing.basedir}/core/library/core.jar</systemPath>
 		</dependency>
-		
-			<dependency>
+
+		<dependency>
 			<groupId>org.processing</groupId>
 			<artifactId>serial</artifactId>
 			<version>${processing.version}</version>
 			<scope>system</scope>
 			<systemPath>${processing.basedir}/modes/java/libraries/serial/library/serial.jar</systemPath>
 		</dependency>
-		
+
 	</dependencies>
 
 	<build>

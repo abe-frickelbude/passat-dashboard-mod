@@ -8,11 +8,11 @@ public class KalmanFilter {
     private float p;
     private float k;
 
-    public KalmanFilter(final float q, final float r, final float p, final float initial_value) {
+    public KalmanFilter(final float q, final float r, final float p, final float x) {
         this.q = q;
         this.r = r;
         this.p = p;
-        x = x;
+        this.x = x;
     }
 
     public float addSample(final float measurement) {
