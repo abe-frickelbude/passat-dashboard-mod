@@ -3,6 +3,7 @@ package de.fb.adc_monitor.view;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.util.List;
+import javax.annotation.PostConstruct;
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
@@ -15,33 +16,42 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import de.fb.adc_monitor.annotations.SwingView;
 import de.fb.adc_monitor.controller.MainWindowController;
+import de.fb.adc_monitor.service.SerialPortService;
 
 @SwingView
 public class MainWindow extends JFrame {
 
-    private static final Logger logger = LoggerFactory.getLogger(MainWindow.class);
+    private static final Logger log = LoggerFactory.getLogger(MainWindow.class);
 
     @Autowired
     private MainWindowController controller;
+
+    @Autowired
+    private SerialPortService serialPortService;
 
     private JButton connectButton;
     private JButton stopButton;
     private JButton runButton;
     private JButton exitButton;
 
-    private JComboBox<String> sourceSelectionBox;
+    private JComboBox<String> portSelectionBox;
 
     /**
      * Create the frame.
      */
     public MainWindow() {
-
         super();
-        initializeUI();
-        connectSwingEventHandlers();
-
         // default close does nothing to prevent accidentally shutting down application at an inappropriate time
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        initializeUI();
+    }
+
+    @PostConstruct
+    private void init() {
+
+        connectEventHandlers();
+        /////////////////////////////////////////////////////////////////
+        populatePortSelectorBox(serialPortService.getPortNames());
     }
 
     /**
@@ -76,44 +86,48 @@ public class MainWindow extends JFrame {
             null)));
         this.getContentPane().add(controlPanel, BorderLayout.EAST);
 
-        connectButton = new JButton("Connect to source");
+        connectButton = new JButton("Connect");
         runButton = new JButton("Start / Resume");
         stopButton = new JButton("Stop");
         exitButton = new JButton("Exit");
 
-        sourceSelectionBox = new JComboBox<>();
-        sourceSelectionBox.setModel(new DefaultComboBoxModel(new String[] {
+        portSelectionBox = new JComboBox<>();
+        portSelectionBox.setModel(new DefaultComboBoxModel(new String[] {
             "No source selected"
         }));
 
+        JLabel lblArduinoPort = new JLabel("Serial port");
+
         GroupLayout gl_controlPanel = new GroupLayout(controlPanel);
         gl_controlPanel.setHorizontalGroup(
-            gl_controlPanel.createParallelGroup(Alignment.LEADING)
+            gl_controlPanel.createParallelGroup(Alignment.TRAILING)
             .addGroup(gl_controlPanel.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(gl_controlPanel.createParallelGroup(Alignment.LEADING)
+                    .addComponent(portSelectionBox, 0, 121, Short.MAX_VALUE)
+                    .addComponent(lblArduinoPort)
                     .addComponent(connectButton, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
-                    .addComponent(stopButton, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
                     .addComponent(runButton, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
-                    .addComponent(exitButton, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
-                    .addComponent(sourceSelectionBox, 0, 121, Short.MAX_VALUE))
+                    .addComponent(stopButton, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
+                    .addComponent(exitButton, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE))
                 .addContainerGap()));
         gl_controlPanel.setVerticalGroup(
             gl_controlPanel.createParallelGroup(Alignment.LEADING)
-            .addGroup(
-                gl_controlPanel.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(connectButton)
-                .addGap(26)
-                .addComponent(sourceSelectionBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-                    GroupLayout.PREFERRED_SIZE)
-                .addGap(295)
+            .addGroup(gl_controlPanel.createSequentialGroup()
+                .addGap(17)
+                .addComponent(lblArduinoPort)
+                .addPreferredGap(ComponentPlacement.UNRELATED)
+                .addComponent(portSelectionBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                        GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(ComponentPlacement.RELATED, 416, Short.MAX_VALUE)
+                .addComponent(connectButton, GroupLayout.PREFERRED_SIZE, 43, GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(ComponentPlacement.RELATED)
                 .addComponent(runButton, GroupLayout.PREFERRED_SIZE, 50, GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(ComponentPlacement.RELATED)
                 .addComponent(stopButton, GroupLayout.PREFERRED_SIZE, 46, GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(ComponentPlacement.RELATED)
                 .addComponent(exitButton, GroupLayout.PREFERRED_SIZE, 52, GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(168, Short.MAX_VALUE)));
+                .addContainerGap()));
         controlPanel.setLayout(gl_controlPanel);
         heapMonitorPanel.setEnabled(true);
     }
@@ -122,7 +136,7 @@ public class MainWindow extends JFrame {
      * All of the ugly glue logic with local listeners is here until I figure out a better way. The events themselvers,
      * however are sent via an event bus, and are therefore decoupled from the controller code.
      */
-    private void connectSwingEventHandlers() {
+    private void connectEventHandlers() {
 
         connectButton.addActionListener((event) -> {
 
@@ -162,24 +176,24 @@ public class MainWindow extends JFrame {
             }
         });
 
-        sourceSelectionBox.addItemListener(event -> {
+        portSelectionBox.addItemListener(event -> {
             // only send events for the >currently< selected item!
-            if (event.getItem().equals(sourceSelectionBox.getSelectedItem())) {
-
+            if (event.getItem().equals(portSelectionBox.getSelectedItem())) {
+                log.info("Selected port: {}", portSelectionBox.getSelectedItem());
             }
         });
     }
 
     // --------------- The following are event handlers used by the controller to update the main view ----------------
 
-    private void handleUpdateDbSelectorBox(final List<String> dbNames) {
+    private void populatePortSelectorBox(final List<String> portNames) {
 
-        sourceSelectionBox.setEnabled(false);
-        sourceSelectionBox.removeAllItems();
+        portSelectionBox.setEnabled(false);
+        portSelectionBox.removeAllItems();
 
-        for (String dbName : dbNames) {
-            sourceSelectionBox.addItem(dbName);
+        for (String portName : portNames) {
+            portSelectionBox.addItem(portName);
         }
-        sourceSelectionBox.setEnabled(true);
+        portSelectionBox.setEnabled(true);
     }
 }
