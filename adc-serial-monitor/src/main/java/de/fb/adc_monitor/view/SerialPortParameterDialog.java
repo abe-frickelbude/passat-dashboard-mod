@@ -4,32 +4,38 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.collections4.CollectionUtils;
+import org.kordamp.ikonli.octicons.Octicons;
+import org.kordamp.ikonli.swing.FontIcon;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import de.fb.adc_monitor.util.RenderUtils;
+import jssc.SerialPort;
 
 public class SerialPortParameterDialog extends JDialog {
 
-    private static final Logger log = LoggerFactory.getLogger(SerialPortParameterDialog.class);
+    private static final String ARDULINK_NOTE_TEXT = "<html>Note: Ardulink internally sets data bits to 8, <br/> stop bits to 1 and parity to NONE<html>";
 
+    private final JComboBox<String> portNameComboBox;
     private final JComboBox<Integer> baudRateComboBox;
-    private final JComboBox<Integer> dataBitsComboBox;
-    private final JComboBox<Integer> stopBitsComboBox;
-    private final JComboBox<Integer> parityComboBox;
 
     /**
      * Create the dialog.
      */
-    public SerialPortParameterDialog(final JFrame owner) {
+    public SerialPortParameterDialog(final JFrame owner, final List<String> portNames) {
 
         super(owner);
         setBounds(100, 100, 310, 374);
-        this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        setResizable(false);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        // kustom icon for the window title bar!
+        setIconImage(RenderUtils.renderFontIcon(FontIcon.of(Octicons.RADIO_TOWER, DarculaUiColors.WHITE)));
 
         final JPanel contentPanel = new JPanel();
         getContentPane().setLayout(new BorderLayout());
@@ -38,11 +44,13 @@ public class SerialPortParameterDialog extends JDialog {
         getContentPane().add(contentPanel, BorderLayout.NORTH);
         contentPanel.setLayout(new FormLayout(new ColumnSpec[] {
             ColumnSpec.decode("150px"),
-            ColumnSpec.decode("100px"),
+            ColumnSpec.decode("100px:grow"),
             FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,
             ColumnSpec.decode("33px:grow"),
         },
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.UNRELATED_GAP_ROWSPEC,
@@ -58,31 +66,21 @@ public class SerialPortParameterDialog extends JDialog {
         JLabel lblSpecifyParametersFor = new JLabel("Specify parameters for serial connection");
         contentPanel.add(lblSpecifyParametersFor, "1, 2, 3, 1");
 
+        final JLabel lblPortLabel = new JLabel("Port");
+        contentPanel.add(lblPortLabel, "1, 4, left, default");
+
+        portNameComboBox = new JComboBox<>();
+        contentPanel.add(portNameComboBox, "2, 4, fill, default");
+
         JLabel lblBaudRate = new JLabel("Baud rate");
-        contentPanel.add(lblBaudRate, "1, 4, left, center");
+        contentPanel.add(lblBaudRate, "1, 6, left, center");
 
         baudRateComboBox = new JComboBox<>();
         baudRateComboBox.setMinimumSize(new Dimension(100, 26));
-        baudRateComboBox.setEditable(true);
-        contentPanel.add(baudRateComboBox, "2, 4, fill, top");
+        contentPanel.add(baudRateComboBox, "2, 6, fill, top");
 
-        JLabel lblDataBits = new JLabel("Data bits");
-        contentPanel.add(lblDataBits, "1, 6, left, default");
-
-        dataBitsComboBox = new JComboBox<>();
-        contentPanel.add(dataBitsComboBox, "2, 6, fill, default");
-
-        JLabel lblStopBits = new JLabel("Stop bits");
-        contentPanel.add(lblStopBits, "1, 8");
-
-        stopBitsComboBox = new JComboBox<>();
-        contentPanel.add(stopBitsComboBox, "2, 8, fill, default");
-
-        JLabel lblParity = new JLabel("Parity");
-        contentPanel.add(lblParity, "1, 10, left, default");
-
-        parityComboBox = new JComboBox<>();
-        contentPanel.add(parityComboBox, "2, 10, fill, default");
+        final JLabel noteLabel = new JLabel(ARDULINK_NOTE_TEXT);
+        contentPanel.add(noteLabel, "1, 10, 2, 1, left, center");
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -105,6 +103,8 @@ public class SerialPortParameterDialog extends JDialog {
             this.setVisible(false);
         });
 
+        populatePortNameBox(portNames);
+        populateBaudRateBox();
     }
 
     public SerialPortParams ask() {
@@ -113,12 +113,33 @@ public class SerialPortParameterDialog extends JDialog {
         setLocationRelativeTo(getParent());
         setVisible(true);
         dispose();
-
-        log.info("Dialog closed!");
         return buildDataModel();
     }
 
     private SerialPortParams buildDataModel() {
-        return new SerialPortParams();
+        final SerialPortParams params = new SerialPortParams();
+        params.setPortName(portNameComboBox.getItemAt(portNameComboBox.getSelectedIndex()));
+        params.setBaudRate(baudRateComboBox.getItemAt(baudRateComboBox.getSelectedIndex()));
+        return params;
+    }
+
+    private void populatePortNameBox(final List<String> portNames) {
+        if (CollectionUtils.isNotEmpty(portNames)) {
+            for (String portName : portNames) {
+                portNameComboBox.addItem(portName);
+            }
+        }
+    }
+
+    // Uses constants from the JSCC library
+    private void populateBaudRateBox() {
+        baudRateComboBox.addItem(SerialPort.BAUDRATE_9600);
+        baudRateComboBox.addItem(SerialPort.BAUDRATE_14400);
+        baudRateComboBox.addItem(SerialPort.BAUDRATE_19200);
+        baudRateComboBox.addItem(SerialPort.BAUDRATE_38400);
+        baudRateComboBox.addItem(SerialPort.BAUDRATE_57600);
+        baudRateComboBox.addItem(SerialPort.BAUDRATE_115200);
+        baudRateComboBox.addItem(SerialPort.BAUDRATE_128000);
+        baudRateComboBox.addItem(SerialPort.BAUDRATE_256000);
     }
 }

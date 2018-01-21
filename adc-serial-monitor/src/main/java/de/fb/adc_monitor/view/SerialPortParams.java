@@ -2,10 +2,16 @@ package de.fb.adc_monitor.view;
 
 public class SerialPortParams {
 
+    private String portName;
     private int baudRate;
-    private int dataBits;
-    private int stopBits;
-    private int parity;
+
+    public String getPortName() {
+        return portName;
+    }
+
+    public void setPortName(final String portName) {
+        this.portName = portName;
+    }
 
     public int getBaudRate() {
         return baudRate;
@@ -15,27 +21,18 @@ public class SerialPortParams {
         this.baudRate = baudRate;
     }
 
-    public int getDataBits() {
-        return dataBits;
-    }
-
-    public void setDataBits(final int dataBits) {
-        this.dataBits = dataBits;
-    }
-
-    public int getStopBits() {
-        return stopBits;
-    }
-
-    public void setStopBits(final int stopBits) {
-        this.stopBits = stopBits;
-    }
-
-    public int getParity() {
-        return parity;
-    }
-
-    public void setParity(final int parity) {
-        this.parity = parity;
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("SerialPortParams [");
+        if (portName != null) {
+            builder.append("portName=");
+            builder.append(portName);
+            builder.append(", ");
+        }
+        builder.append("baudRate=");
+        builder.append(baudRate);
+        builder.append("]");
+        return builder.toString();
     }
 }

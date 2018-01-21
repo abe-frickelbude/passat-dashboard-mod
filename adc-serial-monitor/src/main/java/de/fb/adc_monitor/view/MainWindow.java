@@ -2,7 +2,6 @@ package de.fb.adc_monitor.view;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
@@ -11,12 +10,15 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import org.kordamp.ikonli.octicons.Octicons;
+import org.kordamp.ikonli.swing.FontIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import de.fb.adc_monitor.annotations.SwingView;
 import de.fb.adc_monitor.controller.MainWindowController;
 import de.fb.adc_monitor.service.SerialPortService;
+import de.fb.adc_monitor.util.RenderUtils;
 
 @SwingView
 public class MainWindow extends JFrame {
@@ -34,8 +36,6 @@ public class MainWindow extends JFrame {
     private JButton runButton;
     private JButton exitButton;
 
-    private JComboBox<String> portSelectionBox;
-
     /**
      * Create the frame.
      */
@@ -48,28 +48,29 @@ public class MainWindow extends JFrame {
 
     public void showSerialPortDialog() {
 
-        final SerialPortParameterDialog dialog = new SerialPortParameterDialog(this);
+        final SerialPortParameterDialog dialog = new SerialPortParameterDialog(this, serialPortService.getPortNames());
+        dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         dialog.setModal(true);
 
-        dialog.ask();
+        final SerialPortParams params = dialog.ask();
+        log.info(params.toString());
     }
 
     @PostConstruct
     private void init() {
-
         connectEventHandlers();
-        populatePortSelectorBox(serialPortService.getPortNames());
     }
 
     /**
      * Initialize the contents of the frame.
      */
-    @SuppressWarnings({
-        "unchecked", "rawtypes"
-    })
     private void initializeUI() {
 
         this.setTitle("Arduino ADC Serial Monitor");
+
+        // kustom icon for the window title bar!
+        setIconImage(RenderUtils.renderFontIcon(FontIcon.of(Octicons.ZAP, DarculaUiColors.WHITE)));
+
         this.setBounds(100, 100, 776, 765);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.getContentPane().setLayout(new BorderLayout(0, 0));
@@ -94,16 +95,13 @@ public class MainWindow extends JFrame {
         this.getContentPane().add(controlPanel, BorderLayout.EAST);
 
         connectButton = new JButton("Connect");
+        connectButton.setIcon(FontIcon.of(Octicons.RADIO_TOWER, DarculaUiColors.LIGHT_GRAY));
+
         runButton = new JButton("Start / Resume");
         stopButton = new JButton("Stop");
+
         exitButton = new JButton("Exit");
-
-        portSelectionBox = new JComboBox<>();
-        portSelectionBox.setModel(new DefaultComboBoxModel(new String[] {
-            "No source selected"
-        }));
-
-        JLabel lblArduinoPort = new JLabel("Serial port");
+        exitButton.setIcon(FontIcon.of(Octicons.SIGN_OUT, DarculaUiColors.LIGHT_GRAY));
 
         GroupLayout gl_controlPanel = new GroupLayout(controlPanel);
         gl_controlPanel.setHorizontalGroup(
@@ -111,8 +109,6 @@ public class MainWindow extends JFrame {
             .addGroup(gl_controlPanel.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(gl_controlPanel.createParallelGroup(Alignment.LEADING)
-                    .addComponent(portSelectionBox, 0, 121, Short.MAX_VALUE)
-                    .addComponent(lblArduinoPort)
                     .addComponent(connectButton, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
                     .addComponent(runButton, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
                     .addComponent(stopButton, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
@@ -120,13 +116,8 @@ public class MainWindow extends JFrame {
                 .addContainerGap()));
         gl_controlPanel.setVerticalGroup(
             gl_controlPanel.createParallelGroup(Alignment.LEADING)
-            .addGroup(gl_controlPanel.createSequentialGroup()
-                .addGap(17)
-                .addComponent(lblArduinoPort)
-                .addPreferredGap(ComponentPlacement.UNRELATED)
-                .addComponent(portSelectionBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-                    GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(ComponentPlacement.RELATED, 416, Short.MAX_VALUE)
+            .addGroup(Alignment.TRAILING, gl_controlPanel.createSequentialGroup()
+                .addContainerGap(487, Short.MAX_VALUE)
                 .addComponent(connectButton, GroupLayout.PREFERRED_SIZE, 43, GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(ComponentPlacement.RELATED)
                 .addComponent(runButton, GroupLayout.PREFERRED_SIZE, 50, GroupLayout.PREFERRED_SIZE)
@@ -174,28 +165,10 @@ public class MainWindow extends JFrame {
                 JOptionPane.showMessageDialog(null,
                     "Cannot exit at this time - please shut down first and wait for all pending tasks to complete!",
                     "Exit not possible", JOptionPane.ERROR_MESSAGE);
-                // System.exit(0); // for testing
-            }
-        });
-
-        portSelectionBox.addItemListener(event -> {
-            // only send events for the >currently< selected item!
-            if (event.getItem().equals(portSelectionBox.getSelectedItem())) {
-                log.info("Selected port: {}", portSelectionBox.getSelectedItem());
             }
         });
     }
 
     // --------------- The following are event handlers used by the controller to update the main view ----------------
 
-    private void populatePortSelectorBox(final List<String> portNames) {
-
-        portSelectionBox.setEnabled(false);
-        portSelectionBox.removeAllItems();
-
-        for (String portName : portNames) {
-            portSelectionBox.addItem(portName);
-        }
-        portSelectionBox.setEnabled(true);
-    }
 }

@@ -27,6 +27,11 @@
 		<jackson.version>2.5.2</jackson.version>
 		<jackson.joda.version>2.5.2</jackson.joda.version>
 
+		<ikonli.version>2.1.1</ikonli.version>
+		<jgoodies.version>1.9.0</jgoodies.version>
+		<ardulink.version>2.1.0</ardulink.version>
+		<jchart2d.version>3.3.2</jchart2d.version>
+
 		<org.springframework.version>5.0.2.RELEASE</org.springframework.version>
 		<junit.version>4.12</junit.version>
 
@@ -39,12 +44,6 @@
 
 	<dependencies>
 
-		<dependency>
-			<groupId>org.freedesktop.tango</groupId>
-			<artifactId>tango-icon-theme</artifactId>
-			<version>0.8.90</version>
-			<scope>compile</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -100,20 +99,27 @@
 			<version>${joda-time.version}</version>
 		</dependency>
 
-		<!-- JGoodies Swing addons -->
+		<!-- extra Swing layout managers -->
 		<dependency>
 			<groupId>com.jgoodies</groupId>
 			<artifactId>jgoodies-forms</artifactId>
-			<version>1.9.0</version>
+			<version>${jgoodies.version}</version>
+		</dependency>
+
+		<!-- custom icons -->
+		<dependency>
+			<groupId>org.kordamp.ikonli</groupId>
+			<artifactId>ikonli-swing</artifactId>
+			<version>${ikonli.version}</version>
 		</dependency>
 
 		<dependency>
-			<groupId>com.jgoodies</groupId>
-			<artifactId>jgoodies-binding</artifactId>
-			<version>2.13.0</version>
+			<groupId>org.kordamp.ikonli</groupId>
+			<artifactId>ikonli-octicons-pack</artifactId>
+			<version>${ikonli.version}</version>
 		</dependency>
 
-		<!-- Darcula Look-and-feel -->
+		<!-- IntelliJ Darcula Look-and-feel -->
 		<dependency>
 			<groupId>bulenkov</groupId>
 			<artifactId>darcula</artifactId>
@@ -125,14 +131,27 @@
 		<dependency>
 			<groupId>net.sf.jchart2d</groupId>
 			<artifactId>jchart2d</artifactId>
-			<version>3.3.2</version>
+			<version>${jchart2d.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
+		<!-- Arduino connectivity -->
 		<dependency>
-			<groupId>org.scream3r</groupId>
-			<artifactId>jssc</artifactId>
-			<version>2.8.0</version>
+			<groupId>org.ardulink</groupId>
+			<artifactId>ardulink-core-base</artifactId>
+			<version>${ardulink.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ardulink</groupId>
+			<artifactId>ardulink-core-util</artifactId>
+			<version>${ardulink.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ardulink</groupId>
+			<artifactId>ardulink-core-serial-jssc</artifactId>
+			<version>${ardulink.version}</version>
 		</dependency>
 
 
