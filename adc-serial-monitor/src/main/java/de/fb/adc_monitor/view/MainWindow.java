@@ -41,16 +41,23 @@ public class MainWindow extends JFrame {
      */
     public MainWindow() {
         super();
-        // default close does nothing to prevent accidentally shutting down application at an inappropriate time
+        // default close does nothing to prevent accidentally shutting down the application accidentally
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         initializeUI();
+    }
+
+    public void showSerialPortDialog() {
+
+        final SerialPortParameterDialog dialog = new SerialPortParameterDialog(this);
+        dialog.setModal(true);
+
+        dialog.ask();
     }
 
     @PostConstruct
     private void init() {
 
         connectEventHandlers();
-        /////////////////////////////////////////////////////////////////
         populatePortSelectorBox(serialPortService.getPortNames());
     }
 
@@ -118,7 +125,7 @@ public class MainWindow extends JFrame {
                 .addComponent(lblArduinoPort)
                 .addPreferredGap(ComponentPlacement.UNRELATED)
                 .addComponent(portSelectionBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-                        GroupLayout.PREFERRED_SIZE)
+                    GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(ComponentPlacement.RELATED, 416, Short.MAX_VALUE)
                 .addComponent(connectButton, GroupLayout.PREFERRED_SIZE, 43, GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(ComponentPlacement.RELATED)
@@ -133,17 +140,12 @@ public class MainWindow extends JFrame {
     }
 
     /**
-     * All of the ugly glue logic with local listeners is here until I figure out a better way. The events themselvers,
-     * however are sent via an event bus, and are therefore decoupled from the controller code.
+     * All of the ugly glue logic with local listeners is here until I figure out a better way.
      */
     private void connectEventHandlers() {
 
-        connectButton.addActionListener((event) -> {
-
-        });
-
         connectButton.addActionListener(event -> {
-
+            showSerialPortDialog();
         });
 
         runButton.addActionListener(event -> {
