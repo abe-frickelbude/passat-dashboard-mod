@@ -26,11 +26,11 @@ public class SerialPortParams {
         StringBuilder builder = new StringBuilder();
         builder.append("SerialPortParams [");
         if (portName != null) {
-            builder.append("portName=");
+            builder.append("portName = ");
             builder.append(portName);
             builder.append(", ");
         }
-        builder.append("baudRate=");
+        builder.append("baudRate = ");
         builder.append(baudRate);
         builder.append("]");
         return builder.toString();

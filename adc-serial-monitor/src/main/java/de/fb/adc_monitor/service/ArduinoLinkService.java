@@ -10,10 +10,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import jssc.SerialPortList;
 
+/**
+ * Wrapper for ArduLink API facilities.
+ * 
+ * @author Ibragim Kuliev
+ *
+ */
 @Service
-public class SerialPortService {
+public class ArduinoLinkService {
 
-    private static final Logger log = LoggerFactory.getLogger(SerialPortService.class);
+    private static final Logger log = LoggerFactory.getLogger(ArduinoLinkService.class);
 
     public List<String> getPortNames() {
 

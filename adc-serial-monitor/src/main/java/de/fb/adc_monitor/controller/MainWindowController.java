@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import de.fb.adc_monitor.service.ArduinoLinkService;
 
 /**
  * Controller logic for the MainWindow view class.
@@ -13,14 +14,17 @@ import org.springframework.stereotype.Component;
  * @author ibragim
  * 
  */
-@Component("mainWindowController")
 @SuppressWarnings("unused")
+@Component("mainWindowController")
 public class MainWindowController {
 
-    private static Logger logger = LoggerFactory.getLogger(MainWindowController.class);
+    private static final Logger log = LoggerFactory.getLogger(MainWindowController.class);
 
     @Autowired
     private ApplicationContext appContext;
+
+    @Autowired
+    private ArduinoLinkService serialPortService;
 
     public MainWindowController() {
 
@@ -39,24 +43,5 @@ public class MainWindowController {
 
         // TODO: add any necessary appication context and resources cleanup code
         System.exit(0);
-    }
-
-    public void handleConnectDbEvent(final ActionEvent event) {
-        logger.info("Connect button!");
-        // TODO
-    }
-
-    public void handleStartAggEvent(final ActionEvent event) {
-        logger.info("Start button!");
-        // TODO
-    }
-
-    public void handleStopAggEvent(final ActionEvent event) {
-        logger.info("Stop button!");
-        // TODO
-    }
-
-    public void handleDatabaseSelectionEvent(final String selectedItem) {
-        logger.info(selectedItem.toString());
     }
 }

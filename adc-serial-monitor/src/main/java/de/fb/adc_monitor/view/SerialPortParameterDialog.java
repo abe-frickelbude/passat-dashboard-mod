@@ -8,6 +8,8 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.kordamp.ikonli.octicons.Octicons;
 import org.kordamp.ikonli.swing.FontIcon;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -23,6 +25,9 @@ public class SerialPortParameterDialog extends JDialog {
 
     private final JComboBox<String> portNameComboBox;
     private final JComboBox<Integer> baudRateComboBox;
+
+    // somewhat unsafe - unsychronized access here!
+    private boolean okClicked = false;
 
     /**
      * Create the dialog.
@@ -97,23 +102,25 @@ public class SerialPortParameterDialog extends JDialog {
 
         okButton.addActionListener(event -> {
             this.setVisible(false);
+            okClicked = true;
         });
 
         cancelButton.addActionListener(event -> {
             this.setVisible(false);
+            okClicked = false;
         });
 
         populatePortNameBox(portNames);
         populateBaudRateBox();
     }
 
-    public SerialPortParams ask() {
+    public Pair<SerialPortParams, Boolean> showDialog() {
 
         pack();
         setLocationRelativeTo(getParent());
         setVisible(true);
         dispose();
-        return buildDataModel();
+        return new ImmutablePair<>(buildDataModel(), okClicked);
     }
 
     private SerialPortParams buildDataModel() {

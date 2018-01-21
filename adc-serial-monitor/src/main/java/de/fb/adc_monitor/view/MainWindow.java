@@ -10,6 +10,7 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import org.apache.commons.lang3.tuple.Pair;
 import org.kordamp.ikonli.octicons.Octicons;
 import org.kordamp.ikonli.swing.FontIcon;
 import org.slf4j.Logger;
@@ -17,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import de.fb.adc_monitor.annotations.SwingView;
 import de.fb.adc_monitor.controller.MainWindowController;
-import de.fb.adc_monitor.service.SerialPortService;
+import de.fb.adc_monitor.service.ArduinoLinkService;
 import de.fb.adc_monitor.util.RenderUtils;
 
 @SwingView
@@ -29,7 +30,7 @@ public class MainWindow extends JFrame {
     private MainWindowController controller;
 
     @Autowired
-    private SerialPortService serialPortService;
+    private ArduinoLinkService serialPortService;
 
     private JButton connectButton;
     private JButton stopButton;
@@ -48,11 +49,12 @@ public class MainWindow extends JFrame {
 
     public void showSerialPortDialog() {
 
+        // TESTING STUB!
         final SerialPortParameterDialog dialog = new SerialPortParameterDialog(this, serialPortService.getPortNames());
         dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         dialog.setModal(true);
 
-        final SerialPortParams params = dialog.ask();
+        final Pair<SerialPortParams, Boolean> params = dialog.showDialog();
         log.info(params.toString());
     }
 
