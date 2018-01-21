@@ -23,7 +23,7 @@ public final class UILayouter {
     private static final float MAIN_WINDOW_SIZE = 0.65f;
 
     // gap between windows when side-by-side on a single display
-    private static final int HORIZONTAL_MARGIN = 10;
+    private static final int HORIZONTAL_MARGIN = 0;
 
     /*
      * gap between top of the windows and the top edge of the screen
@@ -53,15 +53,15 @@ public final class UILayouter {
      * to the second display and maximize it.
      *
      */
-    public void layoutWindows(final boolean useMultipleDisplays) {
+    public void layoutWindows(final boolean useMultipleDisplays, final float sizeRatio) {
 
         GraphicsEnvironment environment = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice[] devices = environment.getScreenDevices();
 
         // debug
-        log.debug("Available displays:");
+        log.info("Available displays:");
         for (GraphicsDevice device : devices) {
-            log.debug("Display {} -> {} x {}", device.getIDstring(),
+            log.info("Display {} -> {} x {}", device.getIDstring(),
                 device.getDisplayMode().getWidth(),
                 device.getDisplayMode().getHeight());
         }
@@ -91,15 +91,17 @@ public final class UILayouter {
             int displayWidth = defaultDevice.getDisplayMode().getWidth();
             int displayHeight = defaultDevice.getDisplayMode().getHeight();
 
-            int windowWidth = displayWidth / 2 - HORIZONTAL_MARGIN;
-            int windowHeight = displayHeight - (HORIZONTAL_MARGIN + BOTTOM_MARGIN);
+            int windowHeight = displayHeight - (TOP_MARGIN + BOTTOM_MARGIN);
 
-            Rectangle mainBounds = new Rectangle(HORIZONTAL_MARGIN, TOP_MARGIN, windowWidth, windowHeight);
+            Rectangle mainBounds = new Rectangle(HORIZONTAL_MARGIN, TOP_MARGIN,
+                Math.round(displayWidth * sizeRatio) - HORIZONTAL_MARGIN,
+                windowHeight);
+
             mainWindow.setBounds(mainBounds);
 
-            Rectangle auxBounds = new Rectangle(displayWidth / 2 + HORIZONTAL_MARGIN,
+            Rectangle auxBounds = new Rectangle(Math.round(displayWidth * sizeRatio) + HORIZONTAL_MARGIN,
                 TOP_MARGIN,
-                windowWidth - HORIZONTAL_MARGIN,
+                Math.round(displayWidth * (1.0f - sizeRatio)) - HORIZONTAL_MARGIN,
                 windowHeight);
             secondaryWindow.setBounds(auxBounds);
         }

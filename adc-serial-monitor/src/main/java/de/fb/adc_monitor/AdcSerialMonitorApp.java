@@ -52,7 +52,7 @@ public class AdcSerialMonitorApp {
                     UILayouter uiLayouter = appContext.getBean(UILayouter.class);
 
                     captureSystemMessageStreams(logWindow);
-                    uiLayouter.layoutWindows(false);
+                    uiLayouter.layoutWindows(false, 0.7f);
 
                     mainWindow.setVisible(true);
                     logWindow.setVisible(true);
