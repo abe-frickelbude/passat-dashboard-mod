@@ -1,12 +1,13 @@
 package de.fb.adc_monitor.controller;
 
-import java.awt.event.ActionEvent;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import de.fb.adc_monitor.service.ArduinoLinkService;
+import de.fb.adc_monitor.view.SerialPortParams;
 
 /**
  * Controller logic for the MainWindow view class.
@@ -24,24 +25,34 @@ public class MainWindowController {
     private ApplicationContext appContext;
 
     @Autowired
-    private ArduinoLinkService serialPortService;
+    private ArduinoLinkService arduinoLinkService;
 
     public MainWindowController() {
 
     }
 
-    public Boolean handleAppRequestExitEvent(final ActionEvent event) {
+    public List<String> getAvailablePorts() {
+        return arduinoLinkService.getAvailablePorts();
+    }
+
+    public void handleConnectEvent(final SerialPortParams params) {
+        arduinoLinkService.connect(params);
+    }
+
+    public Boolean handleAppRequestExitEvent() {
 
         /*
-         * TODO: check for pending and ongoing operations and deny exit (perhaps call back to view)
+         * EXTEND IF NECESSARY: check for pending and ongoing operations and deny exit (perhaps call back to view)
          * as long as there any active tasks in the queue.
          */
         return Boolean.TRUE;
     }
 
-    public void handleAppExitEvent(final ActionEvent event) {
+    public void handleAppExitEvent() {
 
-        // TODO: add any necessary appication context and resources cleanup code
+        arduinoLinkService.disconnect();
+
+        // EXTEND IF NECESSARY add any necessary application context and resources cleanup code
         System.exit(0);
     }
 }

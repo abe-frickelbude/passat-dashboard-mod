@@ -1,0 +1,10 @@
+spring:
+  application.name: arduino-adc-monitor
+ 
+  output.ansi.enabled: ALWAYS
+  logging.config: classpath:logback.xml
+  
+arduino:
+  connect:
+    ping: true
+    timeout: 5

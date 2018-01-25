@@ -7,7 +7,9 @@ import javax.swing.UIManager;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.slf4j.bridge.SLF4JBridgeHandler;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import com.bulenkov.darcula.DarculaLaf;
 import de.fb.adc_monitor.config.AppContextConfiguration;
 import de.fb.adc_monitor.view.LogWindow;
@@ -25,27 +27,24 @@ public class AdcSerialMonitorApp {
 
     private static final Logger log = LoggerFactory.getLogger(AdcSerialMonitorApp.class);
 
-    private final AnnotationConfigApplicationContext appContext;
+    public static void main(final String[] args) {
 
-    /**
-     * 
-     * @param arguments
-     */
-    public AdcSerialMonitorApp(final String[] arguments) {
+        configureLogging();
         configureSwingLookAndFeel();
-        appContext = new AnnotationConfigApplicationContext(AppContextConfiguration.class);
-        appContext.registerShutdownHook();
-    }
 
-    public void run() {
+        /*
+         * The section below might now be completely self-explanatory, so:
+         * Basically the >run< sequence actually consists of two steps - the first one has to initialize the Spring
+         * app context along with all SpringBoot magic, and the second one then initializes and displays the Swing UI.
+         * For this to work, we need to retrieve the app context from the initialized SpringApplication instance, hence
+         * the line below.
+         */
+        try (final ConfigurableApplicationContext appContext = SpringApplication.run(AppContextConfiguration.class, args)) {
 
-        EventQueue.invokeLater(new Runnable() {
+            appContext.registerShutdownHook();
 
-            @SuppressWarnings("synthetic-access")
-            @Override
-            public void run() {
+            EventQueue.invokeLater(() -> {
                 try {
-
                     // show the UI windows
                     MainWindow mainWindow = appContext.getBean(MainWindow.class);
                     LogWindow logWindow = appContext.getBean(LogWindow.class);
@@ -59,16 +58,20 @@ public class AdcSerialMonitorApp {
 
                 } catch (Exception ex) {
                     log.error(ex.getMessage(), ex);
+                    System.exit(-1);
                 }
-            }
-        });
+            });
+        }
     }
 
-    public void shutdown() {
-        // System.exit(0);
+    private static void configureLogging() {
+
+        // route java.util.logging through SLF4J
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
     }
 
-    private void configureSwingLookAndFeel() {
+    private static void configureSwingLookAndFeel() {
 
         // Swing "platform look and feel" has to be set PRIOR to any component initialization,
         // otherwise it will have no effect!
@@ -83,7 +86,7 @@ public class AdcSerialMonitorApp {
     }
 
     @SuppressWarnings("resource")
-    private void captureSystemMessageStreams(final LogWindow logWindow) {
+    private static void captureSystemMessageStreams(final LogWindow logWindow) {
 
         // split System.out and System.err and direct the cloned streams to the logging area
         PrintStream sysout = System.out;

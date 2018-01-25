@@ -2,6 +2,7 @@ package de.fb.adc_monitor.view;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
@@ -13,24 +14,18 @@ import javax.swing.border.TitledBorder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.kordamp.ikonli.octicons.Octicons;
 import org.kordamp.ikonli.swing.FontIcon;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import de.fb.adc_monitor.annotations.SwingView;
 import de.fb.adc_monitor.controller.MainWindowController;
-import de.fb.adc_monitor.service.ArduinoLinkService;
 import de.fb.adc_monitor.util.RenderUtils;
 
 @SwingView
 public class MainWindow extends JFrame {
 
-    private static final Logger log = LoggerFactory.getLogger(MainWindow.class);
+    // private static final Logger log = LoggerFactory.getLogger(MainWindow.class);
 
     @Autowired
     private MainWindowController controller;
-
-    @Autowired
-    private ArduinoLinkService serialPortService;
 
     private JButton connectButton;
     private JButton stopButton;
@@ -45,17 +40,6 @@ public class MainWindow extends JFrame {
         // default close does nothing to prevent accidentally shutting down the application accidentally
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         initializeUI();
-    }
-
-    public void showSerialPortDialog() {
-
-        // TESTING STUB!
-        final SerialPortParameterDialog dialog = new SerialPortParameterDialog(this, serialPortService.getPortNames());
-        dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        dialog.setModal(true);
-
-        final Pair<SerialPortParams, Boolean> params = dialog.showDialog();
-        log.info(params.toString());
     }
 
     @PostConstruct
@@ -99,7 +83,7 @@ public class MainWindow extends JFrame {
         connectButton = new JButton("Connect");
         connectButton.setIcon(FontIcon.of(Octicons.RADIO_TOWER, DarculaUiColors.LIGHT_GRAY));
 
-        runButton = new JButton("Start / Resume");
+        runButton = new JButton("Start");
         stopButton = new JButton("Stop");
 
         exitButton = new JButton("Exit");
@@ -132,9 +116,6 @@ public class MainWindow extends JFrame {
         heapMonitorPanel.setEnabled(true);
     }
 
-    /**
-     * All of the ugly glue logic with local listeners is here until I figure out a better way.
-     */
     private void connectEventHandlers() {
 
         connectButton.addActionListener(event -> {
@@ -150,25 +131,51 @@ public class MainWindow extends JFrame {
         });
 
         exitButton.addActionListener(event -> {
-
-            // ask if it is OK to exit
-            Boolean exitAllowed = controller.handleAppRequestExitEvent(event);
-            if (exitAllowed.booleanValue() == true) {
-
-                int result = JOptionPane.showConfirmDialog(null,
-                    "Are you sure you want to exit the application?",
-                    "Confirm exit", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-
-                if (result == JOptionPane.YES_OPTION) {
-                    controller.handleAppExitEvent(event);
-                }
-
-            } else {
-                JOptionPane.showMessageDialog(null,
-                    "Cannot exit at this time - please shut down first and wait for all pending tasks to complete!",
-                    "Exit not possible", JOptionPane.ERROR_MESSAGE);
-            }
+            showExitDialog();
         });
+    }
+
+    private void showSerialPortDialog() {
+
+        List<String> portNames = controller.getAvailablePorts();
+        if (!portNames.isEmpty()) {
+
+            final SerialPortParameterDialog dialog = new SerialPortParameterDialog(this, controller.getAvailablePorts());
+            dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+            dialog.setModal(true);
+
+            final Pair<SerialPortParams, Boolean> dialogResult = dialog.showDialog();
+            if (dialogResult.getRight() == Boolean.TRUE) {
+                controller.handleConnectEvent(dialogResult.getLeft());
+            }
+
+        } else {
+            JOptionPane.showMessageDialog(null,
+                "No serial ports detected!",
+                "No serial ports",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void showExitDialog() {
+
+        // ask if it is OK to exit
+        Boolean exitAllowed = controller.handleAppRequestExitEvent();
+        if (exitAllowed.booleanValue() == true) {
+
+            int result = JOptionPane.showConfirmDialog(null,
+                "Are you sure you want to exit the application?",
+                "Confirm exit", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+            if (result == JOptionPane.YES_OPTION) {
+                controller.handleAppExitEvent();
+            }
+
+        } else {
+            JOptionPane.showMessageDialog(null,
+                "Cannot exit at this time - please shut down first and wait for all pending tasks to complete!",
+                "Exit not possible", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     // --------------- The following are event handlers used by the controller to update the main view ----------------
