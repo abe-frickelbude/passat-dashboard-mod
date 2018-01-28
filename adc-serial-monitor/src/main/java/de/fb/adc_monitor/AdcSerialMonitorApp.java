@@ -1,10 +1,7 @@
 package de.fb.adc_monitor;
 
 import java.awt.EventQueue;
-import java.io.BufferedOutputStream;
-import java.io.PrintStream;
 import javax.swing.UIManager;
-import org.apache.commons.io.output.TeeOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -50,7 +47,7 @@ public class AdcSerialMonitorApp {
                     LogWindow logWindow = appContext.getBean(LogWindow.class);
                     UILayouter uiLayouter = appContext.getBean(UILayouter.class);
 
-                    captureSystemMessageStreams(logWindow);
+                    // captureSystemMessageStreams(logWindow);
                     uiLayouter.layoutWindows(false, 0.7f);
 
                     mainWindow.setVisible(true);
@@ -85,20 +82,30 @@ public class AdcSerialMonitorApp {
         }
     }
 
-    @SuppressWarnings("resource")
-    private static void captureSystemMessageStreams(final LogWindow logWindow) {
-
-        // split System.out and System.err and direct the cloned streams to the logging area
-        PrintStream sysout = System.out;
-        TeeOutputStream sysoutSplitter = new TeeOutputStream(sysout, new BufferedOutputStream(logWindow.getLogSysOutStream()));
-        PrintStream sysoutTeeWrapper = new PrintStream(sysoutSplitter, true);
-        System.setOut(sysoutTeeWrapper);
-
-        PrintStream syserr = System.err;
-        TeeOutputStream syserrSplitter = new TeeOutputStream(syserr, new BufferedOutputStream(logWindow.getLogSysErrStream()));
-        PrintStream syserrTeeWrapper = new PrintStream(syserrSplitter, true);
-        System.setErr(syserrTeeWrapper);
-
-        log.info("Log init completed!");
-    }
+    // @SuppressWarnings("resource")
+    // private static void captureSystemMessageStreams(final LogWindow logWindow) {
+    //
+    // // split System.out and System.err and direct the cloned streams to the logging area
+    // PrintStream sysout = System.out;
+    // TeeOutputStream sysoutSplitter = new TeeOutputStream(sysout, new
+    // BufferedOutputStream(logWindow.getLogSysOutStream()));
+    // PrintStream sysoutTeeWrapper = new PrintStream(sysoutSplitter, true);
+    // System.setOut(sysoutTeeWrapper);
+    //
+    // PrintStream syserr = System.err;
+    // TeeOutputStream syserrSplitter = new TeeOutputStream(syserr, new
+    // BufferedOutputStream(logWindow.getLogSysErrStream()));
+    // PrintStream syserrTeeWrapper = new PrintStream(syserrSplitter, true);
+    // System.setErr(syserrTeeWrapper);
+    //
+    // log.info("Log init completed!");
+    //
+    // //// test
+    // for (int i = 0; i < 100; i++) {
+    // log.info("Test message {}", i);
+    // log.warn("Test warning {}", i);
+    // log.error("Test error {}", i);
+    // }
+    //
+    // }
 }

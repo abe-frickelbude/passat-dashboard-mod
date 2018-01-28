@@ -1,10 +1,8 @@
-package de.fb.adc_monitor.view;
+package de.fb.adc_monitor.view.ansi;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import javax.swing.JTextArea;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * A simple log message display derived from JTextArea which provides two stream endpoints that can be used
@@ -16,7 +14,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author ibragim
  * 
  */
-public final class JSystemLogArea extends JTextArea {
+public final class JSystemLogArea2 extends JAnsiTextPane {
 
     private static final int BUFFER_SIZE = 1024;
 
@@ -28,9 +26,9 @@ public final class JSystemLogArea extends JTextArea {
      */
     private static class MessageOutputStream extends ByteArrayOutputStream {
 
-        private JSystemLogArea logArea;
+        private final JSystemLogArea2 logArea;
 
-        public MessageOutputStream(final JSystemLogArea logArea, final int initialSize) {
+        public MessageOutputStream(final JSystemLogArea2 logArea, final int initialSize) {
             super(initialSize);
             this.logArea = logArea;
         }
@@ -45,13 +43,13 @@ public final class JSystemLogArea extends JTextArea {
     private int maxLines = 100;
     private int scrollBatchSize = 5;
 
-    private MessageOutputStream stdOutStream;
-    private MessageOutputStream stdErrStream;
+    private final MessageOutputStream stdOutStream;
+    private final MessageOutputStream stdErrStream;
 
     /**
      * 
      */
-    public JSystemLogArea() {
+    public JSystemLogArea2() {
         super();
         stdOutStream = new MessageOutputStream(this, BUFFER_SIZE);
         stdErrStream = new MessageOutputStream(this, BUFFER_SIZE);
@@ -92,21 +90,24 @@ public final class JSystemLogArea extends JTextArea {
         return stdErrStream;
     }
 
+    @Override
     public void clear() {
-        super.setText(StringUtils.EMPTY);
+        super.clear();
+        // super.setText(StringUtils.EMPTY);
     }
 
+    // @Override
     @Override
     public void append(final String text) {
 
-        if (getLineCount() > maxLines) {
-            clear();
-        }
-        super.append(text);
+        // if (super.getLength() > maxLines) {
+        // super.clear();
+        // }
+        // super.appendANSI(text);
 
-        // auto-scroll text after scrollBatchSize new lines are appended.
-        if (getLineCount() % scrollBatchSize == 0) {
-            setCaretPosition(getDocument().getLength());
-        }
+        // // auto-scroll text after scrollBatchSize new lines are appended.
+        // if (getLineCount() % scrollBatchSize == 0) {
+        // setCaretPosition(getDocument().getLength());
+        // }
     }
 }
