@@ -3,8 +3,10 @@ package de.fb.adc_monitor.view.ansi;
 import java.awt.BorderLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+import org.apache.commons.lang3.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.bulenkov.darcula.DarculaLaf;
@@ -33,28 +35,42 @@ public class JConsoleLogPaneTest {
         consoleLogArea.setColorScheme("/ansi_color_schemes/monokai");
         consoleLogArea.setColorsEnabled(true);
         consoleLogArea.setUseDefaultLafColors(true);
+        consoleLogArea.setMaxContentLength(256000);
 
-        contentPane.add(consoleLogArea, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(consoleLogArea);
+        contentPane.add(scrollPane, BorderLayout.CENTER);
 
         window.setVisible(true);
         window.setBounds(100, 100, 692, 765);
-        // window.pack();
 
         for (int i = 0; i < 10; i++) {
             consoleLogArea
-            .appendMessage(
+            .append(
                 "\u001b[1;30m A quick Fox \u001b[31m jumps \u001b[43;30m oVeR \u001b[36m a LaZy Dog's \u001b[34m Dusty \u001b[0m DeN\n");
         }
 
         consoleLogArea.setCaptureStandardStreams(true);
 
-        // now log via logger
-        for (int i = 0; i < 10; i++) {
-            log.info(
-                "\u001b[1;30m A quick fox \u001b[31m jumps \u001b[34m over \u001b[36m a lazy dog's \u001b[34m dusty \u001b[0m kennel");
-        }
+        // now log via a logger
+        final Thread messager = new Thread(() -> {
 
-        consoleLogArea.setCaptureStandardStreams(false);
+            while (true) {
+                int color = RandomUtils.nextInt(31, 38);
+                int foxId = RandomUtils.nextInt();
 
+                log.info(
+                    "\u001b[1;{}m A quick fox #{} \u001b[31m jumps \u001b[34m over \u001b[36m a lazy dog's \u001b[34m dusty \u001b[0m kennel",
+                    color, foxId);
+
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+
+        messager.start();
+        // consoleLogArea.setCaptureStandardStreams(false);
     }
 }

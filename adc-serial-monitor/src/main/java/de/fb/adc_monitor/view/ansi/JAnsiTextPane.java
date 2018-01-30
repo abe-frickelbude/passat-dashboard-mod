@@ -1,6 +1,7 @@
 package de.fb.adc_monitor.view.ansi;
 
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,10 @@ import org.slf4j.LoggerFactory;
  * user defined color scheme. Defaults to Xterm color scheme if not explicitly set via setColorScheme().
  * </p>
  * 
+ * <p>
+ * All methods that might "hog" the EDT are already properly isolated via SwingUtilities.invokeLater() barrier.
+ * </p>
+ * 
  */
 public class JAnsiTextPane extends JTextPane {
 
@@ -33,15 +38,23 @@ public class JAnsiTextPane extends JTextPane {
     }
 
     public void append(final String text) {
-        ansiCodeProcessor.appendText(text, getDocument());
+        /*
+         * Note: for some reason, this also automatically resolves the missing auto-scroll issue on [potentially]
+         * present surrounding JScrollPane!
+         */
+        SwingUtilities.invokeLater(() -> {
+            ansiCodeProcessor.appendText(text, getDocument());
+        });
     }
 
     public void clear() {
-        try {
-            getDocument().remove(0, getDocument().getLength());
-        } catch (BadLocationException ex) {
-            log.warn(ex.getMessage());
-        }
+        SwingUtilities.invokeLater(() -> {
+            try {
+                getDocument().remove(0, getDocument().getLength());
+            } catch (BadLocationException ex) {
+                log.warn(ex.getMessage());
+            }
+        });
     }
 
     public int getContentLength() {
@@ -60,8 +73,7 @@ public class JAnsiTextPane extends JTextPane {
         if (useDefaultColors) {
             ansiCodeProcessor.setDefaultColors(getForeground(), getBackground());
         } else {
-
+            ansiCodeProcessor.resetDefaultColors();
         }
     }
-
 }

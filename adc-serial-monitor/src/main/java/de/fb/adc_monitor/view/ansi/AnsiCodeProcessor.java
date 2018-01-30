@@ -181,7 +181,6 @@ class AnsiCodeProcessor {
         final StyleContext sc = StyleContext.getDefaultStyleContext();
         AttributeSet attrSet = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, colors.getLeft());
         attrSet = sc.addAttribute(attrSet, StyleConstants.Background, colors.getRight());
-
         int len = document.getLength();
         try {
             document.insertString(len, text, attrSet);

@@ -1,52 +1,43 @@
 package de.fb.adc_monitor.view.ansi;
 
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.Insets;
 import java.io.PrintStream;
-import javax.swing.JPanel;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import de.fb.adc_monitor.util.Constants;
 
-public class JConsoleLogPane extends JPanel {
+/**
+ * Extends {@linkplain JAnsiTextPane} with standard IO stream capturing. This allows one to mirror all System.out /
+ * System.err stream output (and by extension also anything that uses them, e.g. every major logging framework)
+ * 
+ * @author Ibragim Kuliev
+ *
+ */
+public class JConsoleLogPane extends JAnsiTextPane {
 
     private static final Logger log = LoggerFactory.getLogger(JConsoleLogPane.class);
 
     private static final int DEFAULT_CAPTURE_BUFFER_SIZE = 1024; // 1KB
-
-    private final JAnsiTextPane ansiTextPane;
+    private static final int MAX_CONTENT_LENGTH = 2 * Constants.ONE_MEGABYTE;
 
     private int captureBufferSize;
     private boolean captureStandardStreams;
 
+    /*
+     * maximum length of string content before the pane self-clears to make room for
+     * more content. This is a trade-off between number of lines kept in the view and heap consumption.
+     */
+    private int maxContentLength;
+
     private PrintStream stdOutStream;
     private PrintStream stdErrStream;
 
-    // TODO: expose some more useful properties i.e font and stuff
     public JConsoleLogPane() {
 
         super();
         captureBufferSize = DEFAULT_CAPTURE_BUFFER_SIZE;
-
-        ansiTextPane = new JAnsiTextPane();
-        ansiTextPane.setFont(new Font("Verdana", Font.PLAIN, 11));
-        ansiTextPane.setMargin(new Insets(5, 5, 5, 5));
-        ansiTextPane.setVerifyInputWhenFocusTarget(false);
-        ansiTextPane.setEditable(false);
-        add(ansiTextPane, BorderLayout.CENTER);
-    }
-
-    public void setColorScheme(final String schemeName) {
-        ansiTextPane.setColorScheme(schemeName);
-    }
-
-    public void setColorsEnabled(final boolean colorsEnabled) {
-        ansiTextPane.setColorsEnabled(colorsEnabled);
-    }
-
-    public void setUseDefaultLafColors(final boolean useDefaultColors) {
-        ansiTextPane.setUseDefaultLafColors(useDefaultColors);
+        maxContentLength = MAX_CONTENT_LENGTH;
+        captureStandardStreams = false;
     }
 
     public void setCaptureStandardStreams(final boolean captureStandardStreams) {
@@ -54,35 +45,45 @@ public class JConsoleLogPane extends JPanel {
         captureStandardStreams(captureStandardStreams);
     }
 
+    public boolean isStreamCaptureEnabled() {
+        return captureStandardStreams;
+    }
+
     public void setCaptureBufferSize(final int captureBufferSize) {
-        if(captureBufferSize > 0) {
+        if (captureBufferSize > 0) {
             this.captureBufferSize = captureBufferSize;
         } else {
             this.captureBufferSize = DEFAULT_CAPTURE_BUFFER_SIZE;
         }
     }
 
-    public void clear() {
-        ansiTextPane.clear();
+    public void setMaxContentLength(final int maxContentLength) {
+        if (maxContentLength > 0) {
+            this.maxContentLength = maxContentLength;
+        } else {
+            this.maxContentLength = MAX_CONTENT_LENGTH;
+        }
     }
 
-    public void appendMessage(final String text) {
+    @Override
+    public void append(final String text) {
 
-        // WIP
-        ansiTextPane.append(text);
+        if (getDocument().getLength() > maxContentLength) {
+            super.clear();
+        }
+        super.append(text);
     }
 
     @SuppressWarnings("resource")
     private void captureStandardStreams(final boolean capture) {
 
         if (capture) {
-
             // split System.out and System.err and direct the cloned streams to the logging area
             PrintStream sysout = System.out;
             stdOutStream = System.out;
 
             TeeOutputStream sysoutSplitter = new TeeOutputStream(sysout,
-                new MessageOutputStream(captureBufferSize, this::appendMessage));
+                new MessageOutputStream(captureBufferSize, this::append));
 
             PrintStream sysoutTeeWrapper = new PrintStream(sysoutSplitter, true);
             System.setOut(sysoutTeeWrapper);
@@ -91,7 +92,7 @@ public class JConsoleLogPane extends JPanel {
             stdErrStream = System.err;
 
             TeeOutputStream syserrSplitter = new TeeOutputStream(syserr,
-                new MessageOutputStream(captureBufferSize, this::appendMessage));
+                new MessageOutputStream(captureBufferSize, this::append));
 
             PrintStream syserrTeeWrapper = new PrintStream(syserrSplitter, true);
             System.setErr(syserrTeeWrapper);

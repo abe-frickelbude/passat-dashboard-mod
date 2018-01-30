@@ -24,11 +24,16 @@ public class AdcSerialMonitorApp {
 
     private static final Logger log = LoggerFactory.getLogger(AdcSerialMonitorApp.class);
 
-    public static void main(final String[] args) {
+    // singleton application context instance
+    private static ConfigurableApplicationContext appContext;
 
+    public static void main(final String[] args) {
         configureLogging();
         configureSwingLookAndFeel();
+        initializeApp(args);
+    }
 
+    private static void initializeApp(final String[] args) {
         /*
          * The section below might now be completely self-explanatory, so:
          * Basically the >run< sequence actually consists of two steps - the first one has to initialize the Spring
@@ -36,8 +41,8 @@ public class AdcSerialMonitorApp {
          * For this to work, we need to retrieve the app context from the initialized SpringApplication instance, hence
          * the line below.
          */
-        try (final ConfigurableApplicationContext appContext = SpringApplication.run(AppContextConfiguration.class, args)) {
-
+        try {
+            appContext = SpringApplication.run(AppContextConfiguration.class, args);
             appContext.registerShutdownHook();
 
             EventQueue.invokeLater(() -> {
@@ -47,9 +52,7 @@ public class AdcSerialMonitorApp {
                     LogWindow logWindow = appContext.getBean(LogWindow.class);
                     UILayouter uiLayouter = appContext.getBean(UILayouter.class);
 
-                    // captureSystemMessageStreams(logWindow);
                     uiLayouter.layoutWindows(false, 0.7f);
-
                     mainWindow.setVisible(true);
                     logWindow.setVisible(true);
 
@@ -58,54 +61,28 @@ public class AdcSerialMonitorApp {
                     System.exit(-1);
                 }
             });
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            System.exit(-1);
         }
     }
 
     private static void configureLogging() {
-
         // route java.util.logging through SLF4J
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
     }
 
+    /*
+     * Swing "platform look and feel" has to be set PRIOR to any component initialization, otherwise it will have no
+     * effect!
+     */
     private static void configureSwingLookAndFeel() {
-
-        // Swing "platform look and feel" has to be set PRIOR to any component initialization,
-        // otherwise it will have no effect!
         try {
-            // UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             UIManager.setLookAndFeel(new DarculaLaf());
         } catch (Exception ex) {
-
             // Note: this is not an unrecoverable exception - the application will just use the default look and feel!
             log.error(ex.getMessage(), ex);
         }
     }
-
-    // @SuppressWarnings("resource")
-    // private static void captureSystemMessageStreams(final LogWindow logWindow) {
-    //
-    // // split System.out and System.err and direct the cloned streams to the logging area
-    // PrintStream sysout = System.out;
-    // TeeOutputStream sysoutSplitter = new TeeOutputStream(sysout, new
-    // BufferedOutputStream(logWindow.getLogSysOutStream()));
-    // PrintStream sysoutTeeWrapper = new PrintStream(sysoutSplitter, true);
-    // System.setOut(sysoutTeeWrapper);
-    //
-    // PrintStream syserr = System.err;
-    // TeeOutputStream syserrSplitter = new TeeOutputStream(syserr, new
-    // BufferedOutputStream(logWindow.getLogSysErrStream()));
-    // PrintStream syserrTeeWrapper = new PrintStream(syserrSplitter, true);
-    // System.setErr(syserrTeeWrapper);
-    //
-    // log.info("Log init completed!");
-    //
-    // //// test
-    // for (int i = 0; i < 100; i++) {
-    // log.info("Test message {}", i);
-    // log.warn("Test warning {}", i);
-    // log.error("Test error {}", i);
-    // }
-    //
-    // }
 }
