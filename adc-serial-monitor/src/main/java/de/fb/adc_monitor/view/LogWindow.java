@@ -38,7 +38,7 @@ public class LogWindow extends JFrame {
         consoleLogPane.setUseDefaultLafColors(true);
         consoleLogPane.setCaptureStandardStreams(true);
 
-        consoleLogPane.setFont(new Font("Verdana", Font.PLAIN, 11));
+        consoleLogPane.setFont(new Font("Verdana", Font.PLAIN, 12));
         consoleLogPane.setMargin(new Insets(5, 5, 5, 5));
         consoleLogPane.setVerifyInputWhenFocusTarget(false);
         consoleLogPane.setEditable(false);

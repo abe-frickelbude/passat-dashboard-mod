@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 /**
- * Small adapter class that automatically appends its content to the specified consumer
- * 
+ * Small adapter class that automatically dumps its content to the specified consumer upon flush()
+ * and then automatically resets itself.
  */
 class MessageOutputStream extends ByteArrayOutputStream {
 
@@ -19,6 +19,7 @@ class MessageOutputStream extends ByteArrayOutputStream {
 
     @Override
     public void flush() throws IOException {
+        super.flush();
         this.consumer.accept((super.toString()));
         super.reset();
     }

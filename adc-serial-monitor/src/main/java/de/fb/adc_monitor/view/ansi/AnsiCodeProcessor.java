@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 class AnsiCodeProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(JAnsiTextPane.class);
+    private static final Logger log = LoggerFactory.getLogger(AnsiCodeProcessor.class);
 
     private static final Pattern CODE_PATTERN = Pattern.compile("\\u001b\\[(\\d+);?(\\d+)?m([^\\u001b]*)");
 
@@ -118,6 +118,7 @@ class AnsiCodeProcessor {
         }
     }
 
+    // null-safe
     private Pair<Color, Color> getColorOrDefault(final String key) {
         final Pair<Color, Color> colors = colorMap.get(key);
         return colors != null ? colors : defaultColors;

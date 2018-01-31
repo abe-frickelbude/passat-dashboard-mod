@@ -65,7 +65,7 @@ public class MainWindow extends JFrame {
         this.getContentPane().add(leftPane, BorderLayout.CENTER);
         leftPane.setLayout(new BorderLayout(0, 0));
 
-        HeapMonitorWidget heapMonitorPanel = new HeapMonitorWidget();
+        JHeapMonitor heapMonitorPanel = new JHeapMonitor();
         heapMonitorPanel.setPreferredSize(new Dimension(496, 105));
         heapMonitorPanel.setBorder(new CompoundBorder(new EmptyBorder(5, 10, 10, 5),
             new TitledBorder(

@@ -6,45 +6,82 @@ import java.awt.Font;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.swing.GroupLayout;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.border.TitledBorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HeapMonitorWidget extends JPanel implements Runnable {
+public class JHeapMonitor extends JPanel {
 
-    private static final Logger logger = LoggerFactory.getLogger(HeapMonitorWidget.class);
+    private static final Logger logger = LoggerFactory.getLogger(JHeapMonitor.class);
 
-    // update interval, in seconds
-    private static final int UPDATE_INTERVAL = 1;
-
-    // usage bar info string pattern
-    private static final String INFO_BAR_PATTERN = "%4d MB / %4d MB";
+    // in milliseconds
+    private static final int DEFAULT_UPDATE_INTERVAL = 1000;
 
     // number of bytes in one MB
     private static final int ONE_MEGABYTE = 1048576;
 
-    // progress bar font
     private static final Font BAR_FONT = new Font("Tahoma", Font.PLAIN, 11);
 
-    private MemoryMXBean memoryMxBean;
-    private final JProgressBar heapUsageBar;
-    private final JProgressBar nonHeapUsageBar;
+    // usage bar info string pattern
+    private static final String INFO_BAR_PATTERN = "%4d MB / %4d MB";
 
-    private Thread updateThread;
-    private AtomicBoolean updateIsActive;
+    private final MemoryMXBean memoryMxBean;
+    private JProgressBar heapUsageBar;
+    private JProgressBar nonHeapUsageBar;
+
+    private final Thread updateThread;
+    private final AtomicBoolean updateIsActive;
+    private final AtomicInteger updateInterval;
 
     /**
      * Create the panel.
      */
-    public HeapMonitorWidget() {
+    public JHeapMonitor() {
+
+        memoryMxBean = ManagementFactory.getMemoryMXBean();
+        updateThread = new Thread(this::periodicUpdate, "heap monitor update hread");
+        updateIsActive = new AtomicBoolean(false);
+        updateInterval = new AtomicInteger(DEFAULT_UPDATE_INTERVAL);
+        initializeUI();
+    }
+
+    /**
+     * Manual update call
+     */
+    public void updateStatistics() {
+        SwingUtilities.invokeLater(() -> {
+            updateHeapStatistics();
+        });
+    }
+
+    @Override
+    public void setEnabled(final boolean enabled) {
+
+        super.setEnabled(enabled);
+        updateIsActive.set(enabled);
+
+        try {
+            if (!updateThread.isAlive()) {
+                updateThread.start();
+            }
+
+        } catch (IllegalThreadStateException ex) {
+            logger.error(ex.getMessage());
+        }
+    }
+
+    public void setUpdateInterval(final int updateInterval) {
+        if (updateInterval > 0) {
+            this.updateInterval.set(updateInterval);
+        }
+    }
+
+    private void initializeUI() {
 
         setBorder(new TitledBorder(null, "Heap usage monitor", TitledBorder.LEFT, TitledBorder.TOP, null, null));
 
@@ -68,8 +105,8 @@ public class HeapMonitorWidget extends JPanel implements Runnable {
         // nonHeapUsageBar.setForeground(new Color(0, 0, 128));
 
         JLabel heapBarLabel = new JLabel("Heap (used/max)");
-
         JLabel nonHeapLabel = new JLabel("Non-Heap (used/max)");
+
         GroupLayout groupLayout = new GroupLayout(this);
         groupLayout.setHorizontalGroup(
             groupLayout.createParallelGroup(Alignment.LEADING)
@@ -85,8 +122,7 @@ public class HeapMonitorWidget extends JPanel implements Runnable {
                         .addGap(150))
                     .addGroup(groupLayout.createSequentialGroup()
                         .addComponent(nonHeapUsageBar, GroupLayout.DEFAULT_SIZE, 181, Short.MAX_VALUE)
-                        .addContainerGap())))
-            );
+                        .addContainerGap()))));
         groupLayout.setVerticalGroup(
             groupLayout.createParallelGroup(Alignment.TRAILING)
             .addGroup(groupLayout.createSequentialGroup()
@@ -98,60 +134,27 @@ public class HeapMonitorWidget extends JPanel implements Runnable {
                 .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
                     .addComponent(heapUsageBar, GroupLayout.PREFERRED_SIZE, 31, GroupLayout.PREFERRED_SIZE)
                     .addComponent(nonHeapUsageBar, GroupLayout.PREFERRED_SIZE, 31, GroupLayout.PREFERRED_SIZE))
-                .addGap(59))
-            );
+                .addGap(59)));
         setLayout(groupLayout);
-        init();
     }
 
-    @Override
-    public void run() {
+    private void periodicUpdate() {
 
         // run periodic updates
         while (true) {
-
             if (updateIsActive.get() == true) {
-                try {
-                    updateHeapStatistics();
-                    Thread.sleep(TimeUnit.SECONDS.toMillis(UPDATE_INTERVAL));
 
+                SwingUtilities.invokeLater(() -> {
+                    updateHeapStatistics();
+                });
+
+                try {
+                    Thread.sleep(updateInterval.get());
                 } catch (InterruptedException ex) {
-                    logger.error(ex.getMessage(), ex);
+                    Thread.currentThread().interrupt();
                 }
             }
         }
-    }
-
-    /**
-     * Manual update call
-     */
-    public void update() {
-        updateHeapStatistics();
-    }
-
-    @Override
-    public void setEnabled(final boolean enabled) {
-
-        super.setEnabled(enabled);
-        updateIsActive.set(enabled);
-
-        try {
-            if (!updateThread.isAlive()) {
-                updateThread.start();
-            }
-
-        } catch (IllegalThreadStateException ex) {
-            logger.error(ex.getMessage());
-        }
-    }
-
-    /**
-     * Non-Swing initialization code
-     */
-    private void init() {
-        memoryMxBean = ManagementFactory.getMemoryMXBean();
-        updateThread = new Thread(this, "heap monitor update hread");
-        updateIsActive = new AtomicBoolean(false);
     }
 
     /**
