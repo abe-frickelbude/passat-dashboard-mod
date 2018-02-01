@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import org.apache.commons.lang3.ArrayUtils;
 import org.ardulink.core.Link;
 import org.ardulink.core.convenience.Links;
@@ -80,4 +81,10 @@ public class ArduinoLinkService {
     private void init() {
 
     }
+
+    @PreDestroy
+    private void cleanUp() {
+        disconnect();
+    }
+
 }
