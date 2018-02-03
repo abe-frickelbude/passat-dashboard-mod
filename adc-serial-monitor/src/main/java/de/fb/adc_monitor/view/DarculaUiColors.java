@@ -15,6 +15,8 @@ public class DarculaUiColors {
     public static final Color LIGHT_GRAY = new Color(220, 220, 220);
     public static final Color MEDIUM_GRAY = new Color(128, 128, 128);
     public static final Color DARK_GRAY = new Color(109, 109, 109);
+    public static final Color DARKEST_GRAY = new Color(74, 74, 74);
+
     public static final Color DARK_BLUE = new Color(0, 44, 63);
 
     public static final Color PRIMARY1 = new Color(53, 56, 58);
