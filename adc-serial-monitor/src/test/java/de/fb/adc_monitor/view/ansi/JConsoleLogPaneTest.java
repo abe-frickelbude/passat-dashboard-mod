@@ -11,7 +11,7 @@ import org.apache.commons.lang3.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.bulenkov.darcula.DarculaLaf;
-import de.fb.adc_monitor.view.JHeapMonitor;
+import de.fb.adc_monitor.view.component.JHeapMonitor;
 
 public class JConsoleLogPaneTest {
 

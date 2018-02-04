@@ -1,4 +1,4 @@
-package de.fb.adc_monitor.view;
+package de.fb.adc_monitor.view.component;
 
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;

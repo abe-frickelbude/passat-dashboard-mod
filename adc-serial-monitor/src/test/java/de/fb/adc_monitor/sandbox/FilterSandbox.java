@@ -21,22 +21,30 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import de.fb.adc_monitor.math.*;
 import de.fb.adc_monitor.view.DarculaUiColors;
-import de.fb.adc_monitor.view.JHeapMonitor;
+import de.fb.adc_monitor.view.component.JHeapMonitor;
+import de.fb.adc_monitor.view.filter.DoubleExponentialControlBox;
+import de.fb.adc_monitor.view.filter.GuiUtils;
+import de.fb.adc_monitor.view.filter.KalmanControlBox;
+import de.fb.adc_monitor.view.filter.SimpleExponentialControlBox;
 import info.monitorenter.gui.chart.IAxis;
 import info.monitorenter.gui.chart.ITrace2D;
 import info.monitorenter.gui.chart.ZoomableChart;
 import info.monitorenter.gui.chart.axistitlepainters.AxisTitlePainterDefault;
 import info.monitorenter.gui.chart.traces.Trace2DLtd;
 
-public class AdcMonitorViewTest {
+public class FilterSandbox {
 
-    private static final Logger log = LoggerFactory.getLogger(AdcMonitorViewTest.class);
+    private static final Logger log = LoggerFactory.getLogger(FilterSandbox.class);
 
     // sample generator period
     private static final int SAMPLE_PERIOD = 50;
 
-    // number of points in the input signal dataset, used by the chart traces and stats accumulator
-    private static final int NUM_DATA_POINTS = 200;
+    // number of points in the input signal dataset, used by the chart traces
+    private static final int NUM_CHART_DATA_POINTS = 200;
+
+    // ditto, for stats accumulator - the value is lower so that the stats don't "lag" excessively behind the main
+    // trace
+    private static final int NUM_STATS_DATA_POINTS = 25;
 
     // initial conditions
     private static final double MIN_VOLTAGE = 1.0;
@@ -44,6 +52,9 @@ public class AdcMonitorViewTest {
 
     private static final double MIN_JITTER = 0.001;
     private static final double MAX_JITTER = 0.500;
+
+    // i.e. ~4.8 mV per bit of resolution when using default Vref of 5V
+    private static final double ADC_ACCURACY = 0.048;
 
     private JFrame mainWindow;
 
@@ -57,7 +68,7 @@ public class AdcMonitorViewTest {
     private JComboBox<FilterType> filterSelectionBox;
     private JButton resetZoomButton;
     private JButton pauseButton;
-    private JCheckBox showStdDeviationBox;
+    private JCheckBox showMinMaxBox;
     private JCheckBox useGaussianNoiseBox;
 
     private JPanel filterControlPanel;
@@ -77,22 +88,24 @@ public class AdcMonitorViewTest {
     private boolean useGaussianNoise = false;
     private boolean showMinMax = false;
 
+    private AtomicReference<SignalFilter> currentFilter;
+    private SampleAndThresholdFilter thresholdFilter;
+
     private final DescriptiveStatistics signalStatistics;
     private final Random randomGenerator;
-    private AtomicReference<SignalFilter> currentFilter;
 
     // maps filter type -> filter and its associated parameter control box
     private final Map<FilterType, Pair<SignalFilter, JPanel>> signalFilterMap;
 
     public static void main(final String[] args) {
-        AdcMonitorViewTest testApp = new AdcMonitorViewTest();
+        FilterSandbox testApp = new FilterSandbox();
         testApp.runApp();
     }
 
-    public AdcMonitorViewTest() {
+    public FilterSandbox() {
 
         signalFilterMap = new HashMap<>();
-        signalStatistics = new DescriptiveStatistics(NUM_DATA_POINTS);
+        signalStatistics = new DescriptiveStatistics(NUM_STATS_DATA_POINTS);
 
         signalPaused = false;
         randomGenerator = new Random();
@@ -127,8 +140,12 @@ public class AdcMonitorViewTest {
 
                     double filteredVoltageValue = currentFilter.get().addValue(voltageValue);
 
+                    // additionally apply the threshold filter
+                    // filteredVoltageValue = thresholdFilter.addValue(filteredVoltageValue);
+
                     signalStatistics.addValue(filteredVoltageValue);
                     filteredVoltageTrace.addPoint(timeValue, filteredVoltageValue);
+
                     filteredVoltageMinTrace.addPoint(timeValue, signalStatistics.getMin());
                     filteredVoltageMaxTrace.addPoint(timeValue, signalStatistics.getMax());
                 }
@@ -196,6 +213,9 @@ public class AdcMonitorViewTest {
         signalFilterMap.put(FilterType.KALMAN, new ImmutablePair<SignalFilter, JPanel>(filter3, box3));
 
         currentFilter = new AtomicReference<>(signalFilterMap.get(FilterType.SIMPLE_EXPONENTIAL).getLeft());
+
+        thresholdFilter = new SampleAndThresholdFilter();
+        thresholdFilter.setThreshold(ADC_ACCURACY);
     }
 
     private void createControls(final JPanel contentPane) {
@@ -272,8 +292,8 @@ public class AdcMonitorViewTest {
         filterSelectionBox.setEditable(true);
         controlPanel.add(filterSelectionBox, "4, 10, fill, default");
 
-        showStdDeviationBox = new JCheckBox("Show min/max traces");
-        controlPanel.add(showStdDeviationBox, "4, 14");
+        showMinMaxBox = new JCheckBox("Show min/max traces");
+        controlPanel.add(showMinMaxBox, "4, 14");
 
         useGaussianNoiseBox = new JCheckBox("Use gaussian noise");
         controlPanel.add(useGaussianNoiseBox, "4, 16");
@@ -324,36 +344,36 @@ public class AdcMonitorViewTest {
         yAxis.setPaintScale(true);
         yAxis.setPaintGrid(true);
 
-        baseVoltageTrace = new Trace2DLtd(NUM_DATA_POINTS);
+        baseVoltageTrace = new Trace2DLtd(NUM_CHART_DATA_POINTS);
         baseVoltageTrace.setColor(Color.WHITE);
         baseVoltageTrace.setName("Base voltage");
 
         voltageChart.addTrace(baseVoltageTrace);
 
-        voltageTrace = new Trace2DLtd(NUM_DATA_POINTS);
+        voltageTrace = new Trace2DLtd(NUM_CHART_DATA_POINTS);
         voltageTrace.setColor(Color.CYAN);
         voltageTrace.setName("Input signal");
 
         voltageChart.addTrace(voltageTrace);
 
-        filteredVoltageTrace = new Trace2DLtd(NUM_DATA_POINTS);
+        filteredVoltageTrace = new Trace2DLtd(NUM_CHART_DATA_POINTS);
         filteredVoltageTrace.setColor(Color.YELLOW);
         filteredVoltageTrace.setName("Filtered signal");
 
         voltageChart.addTrace(filteredVoltageTrace);
+        filteredVoltageTrace.setZIndex(99);
 
-        filteredVoltageMinTrace = new Trace2DLtd(NUM_DATA_POINTS);
+        filteredVoltageMinTrace = new Trace2DLtd(NUM_CHART_DATA_POINTS);
         filteredVoltageMinTrace.setColor(Color.GREEN);
         filteredVoltageMinTrace.setName("filtered min");
 
         voltageChart.addTrace(filteredVoltageMinTrace);
 
-        filteredVoltageMaxTrace = new Trace2DLtd(NUM_DATA_POINTS);
+        filteredVoltageMaxTrace = new Trace2DLtd(NUM_CHART_DATA_POINTS);
         filteredVoltageMaxTrace.setColor(Color.GREEN);
         filteredVoltageMaxTrace.setName("filtered max");
 
         voltageChart.addTrace(filteredVoltageMaxTrace);
-
         contentPane.add(voltageChart, BorderLayout.CENTER);
     }
 
@@ -372,8 +392,10 @@ public class AdcMonitorViewTest {
             useGaussianNoise = useGaussianNoiseBox.isSelected();
         });
 
-        showStdDeviationBox.addActionListener(event -> {
-            showMinMax = showStdDeviationBox.isSelected();
+        showMinMaxBox.addActionListener(event -> {
+            showMinMax = showMinMaxBox.isSelected();
+            filteredVoltageMinTrace.setVisible(showMinMax);
+            filteredVoltageMaxTrace.setVisible(showMinMax);
         });
 
         // filter type switch

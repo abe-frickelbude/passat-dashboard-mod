@@ -1,6 +1,6 @@
-package de.fb.adc_monitor.sandbox;
+package de.fb.adc_monitor.view.filter;
 
-import static de.fb.adc_monitor.sandbox.GuiUtils.*;
+import static de.fb.adc_monitor.view.filter.GuiUtils.*;
 import java.awt.Dimension;
 import javax.swing.JLabel;
 import javax.swing.JPanel;

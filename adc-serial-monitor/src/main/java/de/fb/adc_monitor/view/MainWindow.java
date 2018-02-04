@@ -18,11 +18,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.fb.adc_monitor.annotations.SwingView;
 import de.fb.adc_monitor.controller.MainWindowController;
 import de.fb.adc_monitor.util.RenderUtils;
+import de.fb.adc_monitor.view.component.JHeapMonitor;
 
 @SwingView
 public class MainWindow extends JFrame {
-
-    // private static final Logger log = LoggerFactory.getLogger(MainWindow.class);
 
     @Autowired
     private MainWindowController controller;
