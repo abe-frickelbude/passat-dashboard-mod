@@ -3,13 +3,19 @@ package de.fb.adc_monitor.view.component;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.swing.JColorChooser;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import org.apache.commons.collections4.CollectionUtils;
 
 public class JColorSwatch extends JComponent {
 
@@ -55,6 +61,7 @@ public class JColorSwatch extends JComponent {
         this.borderWidth = borderWidth;
         this.cornerRadius = cornerRadius;
         this.cursorSize = cursorSize;
+        changeListeners = Collections.emptyList();
 
         if (useCustomCursor) {
             setCustomCursor();
@@ -74,10 +81,20 @@ public class JColorSwatch extends JComponent {
     }
 
     public void addChangeListener(final ChangeListener listener) {
-        if (changeListeners == null) {
+        if (CollectionUtils.isEmpty(changeListeners)) {
             changeListeners = new ArrayList<>();
         }
         changeListeners.add(listener);
+    }
+
+    public void removeChangeListener(final ChangeListener listener) {
+
+        if (CollectionUtils.isNotEmpty(changeListeners)) {
+            changeListeners.remove(listener);
+        }
+        if (CollectionUtils.isEmpty(changeListeners)) {
+            changeListeners = Collections.emptyList();
+        }
     }
 
     @Override
@@ -154,18 +171,80 @@ public class JColorSwatch extends JComponent {
 
     private void registerEvents() {
 
-        this.addMouseListener(new MouseAdapter() {
+        addMouseListener(new MouseAdapter() {
 
             @Override
             @SuppressWarnings("synthetic-access")
             public void mouseClicked(final MouseEvent event) {
-
-                final Color newColor = JColorChooser.showDialog(null, "Pick color", color);
-                if (newColor != null) {
-                    setColor(newColor);
-                }
+                handleClicks(event);
             }
         });
+
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            @SuppressWarnings("synthetic-access")
+            public void mouseDragged(final MouseEvent event) {
+                handleDrags(event);
+            }
+        });
+    }
+
+    private void handleClicks(final MouseEvent event) {
+        if (SwingUtilities.isLeftMouseButton(event)) {
+            pickColor();
+        } else if (SwingUtilities.isRightMouseButton(event)) {
+            showInfoDialog();
+        }
+    }
+
+    private void handleDrags(final MouseEvent event) {
+
+        // if (getBounds().contains(event.getPoint())) {
+        // System.out.println(event.getPoint().toString());
+        // }
+    }
+
+    private void pickColor() {
+        final Color newColor = JColorChooser.showDialog(null, "Pick color", color);
+        if (newColor != null) {
+            setColor(newColor);
+            fireChangeEvent();
+        }
+    }
+
+    private void shiftHue() {
+
+    }
+
+    private void shiftSaturation() {
+
+    }
+
+    private void shiftValue() {
+
+    }
+
+    private void showInfoDialog() {
+        final ColorSwatchInfoDialog dialog = new ColorSwatchInfoDialog(getParentWindow(), color);
+        dialog.setVisible(true);
+    }
+
+    private JFrame getParentWindow() {
+        // walk up the hierarchy until we find the top-most JFrame owner of this component, if any
+        Container parent = getParent();
+        while (parent.getParent() != null) {
+            parent = parent.getParent();
+        }
+        return parent instanceof JFrame ? JFrame.class.cast(parent) : null;
+    }
+
+    private void fireChangeEvent() {
+        if (CollectionUtils.isNotEmpty(changeListeners)) {
+            final ChangeEvent event = new ChangeEvent(color);
+            for (ChangeListener listener : changeListeners) {
+                listener.stateChanged(event);
+            }
+        }
     }
 
     @SuppressWarnings("hiding")
@@ -181,9 +260,7 @@ public class JColorSwatch extends JComponent {
         private boolean useCustomCursor = false;
         private int cursorSize = DEFAULT_CURSOR_SIZE;
 
-
-        public Builder() {
-        }
+        public Builder() {}
 
         public static Builder create() {
             return new Builder();
