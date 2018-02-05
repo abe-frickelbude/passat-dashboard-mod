@@ -25,7 +25,7 @@ public class JColorSwatch extends JComponent {
     public static final Color DEFAULT_BORDER_COLOR = Color.WHITE;
 
     // all dimensions are in pixels
-    public static final int DEFAULT_SWATCH_SIZE = 64;
+    public static final int DEFAULT_SWATCH_SIZE = 16;
     public static final int DEFAULT_BORDER_WIDTH = 1;
     public static final int DEFAULT_CORNER_RADIUS = 8;
     public static final int DEFAULT_CURSOR_SIZE = 8;

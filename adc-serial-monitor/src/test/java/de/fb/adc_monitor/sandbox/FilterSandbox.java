@@ -22,15 +22,12 @@ import com.jgoodies.forms.layout.RowSpec;
 import de.fb.adc_monitor.math.*;
 import de.fb.adc_monitor.view.DarculaUiColors;
 import de.fb.adc_monitor.view.component.JHeapMonitor;
+import de.fb.adc_monitor.view.component.ZoomableChartView;
 import de.fb.adc_monitor.view.filter.DoubleExponentialControlBox;
 import de.fb.adc_monitor.view.filter.GuiUtils;
 import de.fb.adc_monitor.view.filter.KalmanControlBox;
 import de.fb.adc_monitor.view.filter.SimpleExponentialControlBox;
-import info.monitorenter.gui.chart.IAxis;
 import info.monitorenter.gui.chart.ITrace2D;
-import info.monitorenter.gui.chart.ZoomableChart;
-import info.monitorenter.gui.chart.axistitlepainters.AxisTitlePainterDefault;
-import info.monitorenter.gui.chart.traces.Trace2DLtd;
 
 public class FilterSandbox {
 
@@ -66,14 +63,14 @@ public class FilterSandbox {
     private JSlider jitterSlider;
 
     private JComboBox<FilterType> filterSelectionBox;
-    private JButton resetZoomButton;
     private JButton pauseButton;
     private JCheckBox showMinMaxBox;
     private JCheckBox useGaussianNoiseBox;
 
     private JPanel filterControlPanel;
 
-    private ZoomableChart voltageChart;
+    private ZoomableChartView voltageChart;
+
     private ITrace2D baseVoltageTrace;
     private ITrace2D voltageTrace;
     private ITrace2D filteredVoltageTrace;
@@ -298,9 +295,6 @@ public class FilterSandbox {
         useGaussianNoiseBox = new JCheckBox("Use gaussian noise");
         controlPanel.add(useGaussianNoiseBox, "4, 16");
 
-        resetZoomButton = new JButton("Reset zoom");
-        controlPanel.add(resetZoomButton, "4, 18");
-
         pauseButton = new JButton("Pause / Resume");
         controlPanel.add(pauseButton, "4, 20");
 
@@ -313,75 +307,31 @@ public class FilterSandbox {
 
         filterControlPanel = new JPanel();
         controlPanel.add(filterControlPanel, "2, 29, 5, 1, fill, fill");
-        // filterControlPanel.setLayout(new BorderLayout(0, 0));
 
         filterControlPanel.add(signalFilterMap.get(FilterType.SIMPLE_EXPONENTIAL).getRight(), BorderLayout.CENTER);
     }
 
     private void createChart(final JPanel contentPane) {
 
-        voltageChart = new ZoomableChart();
+        voltageChart = new ZoomableChartView();
 
         voltageChart.setBackground(DarculaUiColors.PRIMARY1);
         voltageChart.setForeground(DarculaUiColors.MEDIUM_GRAY);
         voltageChart.setGridColor(DarculaUiColors.DARKEST_GRAY);
 
-        voltageChart.setUseAntialiasing(true);
-        voltageChart.setPaintLabels(true);
+        voltageChart.setXaxisTitle("TIME, s", Color.YELLOW);
+        voltageChart.setYaxisTitle("VOLTAGE, V", Color.YELLOW);
 
-        IAxis<?> xAxis = voltageChart.getAxisX();
-        xAxis.getAxisTitle().setTitle("TIME, s");
-        xAxis.getAxisTitle().setTitlePainter(new AxisTitlePainterDefault());
-        xAxis.getAxisTitle().setTitleColor(Color.YELLOW);
+        baseVoltageTrace = voltageChart.addLtdTrace("Base voltage", Color.WHITE, NUM_CHART_DATA_POINTS);
+        voltageTrace = voltageChart.addLtdTrace("Input signal", Color.CYAN, NUM_CHART_DATA_POINTS);
+        filteredVoltageTrace = voltageChart.addLtdTrace("Filtered signal", Color.YELLOW, NUM_CHART_DATA_POINTS);
+        filteredVoltageMinTrace = voltageChart.addLtdTrace("Filtered min", Color.GREEN, NUM_CHART_DATA_POINTS);
+        filteredVoltageMaxTrace = voltageChart.addLtdTrace("Filtered max", Color.GREEN, NUM_CHART_DATA_POINTS);
 
-        // voltageChart.getAxisX().setPaintScale(true);
-        // voltageChart.getAxisX().setPaintGrid(true);
-
-        IAxis<?> yAxis = voltageChart.getAxisY();
-        yAxis.getAxisTitle().setTitle("VOLTAGE, V");
-        yAxis.getAxisTitle().setTitlePainter(new AxisTitlePainterDefault());
-        yAxis.getAxisTitle().setTitleColor(Color.YELLOW);
-        yAxis.setPaintScale(true);
-        yAxis.setPaintGrid(true);
-
-        baseVoltageTrace = new Trace2DLtd(NUM_CHART_DATA_POINTS);
-        baseVoltageTrace.setColor(Color.WHITE);
-        baseVoltageTrace.setName("Base voltage");
-
-        voltageChart.addTrace(baseVoltageTrace);
-
-        voltageTrace = new Trace2DLtd(NUM_CHART_DATA_POINTS);
-        voltageTrace.setColor(Color.CYAN);
-        voltageTrace.setName("Input signal");
-
-        voltageChart.addTrace(voltageTrace);
-
-        filteredVoltageTrace = new Trace2DLtd(NUM_CHART_DATA_POINTS);
-        filteredVoltageTrace.setColor(Color.YELLOW);
-        filteredVoltageTrace.setName("Filtered signal");
-
-        voltageChart.addTrace(filteredVoltageTrace);
-        filteredVoltageTrace.setZIndex(99);
-
-        filteredVoltageMinTrace = new Trace2DLtd(NUM_CHART_DATA_POINTS);
-        filteredVoltageMinTrace.setColor(Color.GREEN);
-        filteredVoltageMinTrace.setName("filtered min");
-
-        voltageChart.addTrace(filteredVoltageMinTrace);
-
-        filteredVoltageMaxTrace = new Trace2DLtd(NUM_CHART_DATA_POINTS);
-        filteredVoltageMaxTrace.setColor(Color.GREEN);
-        filteredVoltageMaxTrace.setName("filtered max");
-
-        voltageChart.addTrace(filteredVoltageMaxTrace);
         contentPane.add(voltageChart, BorderLayout.CENTER);
     }
 
     private void connectControls() {
-
-        resetZoomButton.addActionListener(event -> {
-            voltageChart.zoomAll();
-        });
 
         pauseButton.addActionListener(event -> {
             signalPaused = !signalPaused;

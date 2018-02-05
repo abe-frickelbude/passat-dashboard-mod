@@ -21,7 +21,9 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
 /**
- * Static information display dialog used by {@linkplain JColorSwatch} to prove information about the current color.
+ * Static information display dialog used by {@linkplain JColorSwatch} to provide detailed information about the current
+ * color. Multiple representations are provided for convenience, and the entire contents can be copied as text to the system
+ * clipboard if necessary.
  * 
  * @author Ibragim Kuliev
  *
