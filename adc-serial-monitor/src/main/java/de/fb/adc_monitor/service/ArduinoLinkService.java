@@ -8,7 +8,11 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import org.apache.commons.lang3.ArrayUtils;
 import org.ardulink.core.Link;
+import org.ardulink.core.Pin;
 import org.ardulink.core.convenience.Links;
+import org.ardulink.core.events.AnalogPinValueChangedEvent;
+import org.ardulink.core.events.DigitalPinValueChangedEvent;
+import org.ardulink.core.events.EventListener;
 import org.ardulink.util.URIs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +66,9 @@ public class ArduinoLinkService {
         + "&waitsecs=" + waitTimeout;
 
         serialLink = Links.getLink(URIs.newURI(portConfig));
-
         log.info("Connected!");
+
+        testAdc();
     }
 
     public void disconnect() {
@@ -77,6 +82,11 @@ public class ArduinoLinkService {
         }
     }
 
+    public int readAdcSample(final int pin) {
+
+        return 0;
+    }
+
     @PostConstruct
     private void init() {
 
@@ -85,6 +95,31 @@ public class ArduinoLinkService {
     @PreDestroy
     private void cleanUp() {
         disconnect();
+    }
+
+    private void testAdc() {
+
+        try {
+
+            serialLink.addListener(new EventListener() {
+
+                @Override
+                public void stateChanged(final DigitalPinValueChangedEvent event) {
+                }
+
+                @Override
+                @SuppressWarnings("synthetic-access")
+                public void stateChanged(final AnalogPinValueChangedEvent event) {
+                    log.info("Current ADC value: {}", event.getValue());
+                }
+            });
+
+            Pin adcPin = Pin.analogPin(0);
+            serialLink.startListening(adcPin);
+
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+        }
     }
 
 }

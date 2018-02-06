@@ -80,18 +80,7 @@
 			<artifactId>commons-math3</artifactId>
 			<version>${commons-math.version}</version>
 		</dependency>
-		
-		<!-- used only by statisticspanel, will be removed -->		
-		<dependency>
-			<groupId>joda-time</groupId>
-			<artifactId>joda-time</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-		</dependency>
-		
+			
 		<!-- extra Swing layout managers -->
 		<dependency>
 			<groupId>com.jgoodies</groupId>
