@@ -22,6 +22,7 @@ public class SimpleExponentialFilter implements SignalFilter {
     @Override
     public double addValue(final double value) {
         currentValue = alpha * value + copAlpha * currentValue;
+        // currentValue = copAlpha * value + alpha * currentValue;
         return currentValue;
     }
 

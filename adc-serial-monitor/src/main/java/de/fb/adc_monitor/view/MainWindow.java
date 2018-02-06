@@ -1,12 +1,11 @@
 package de.fb.adc_monitor.view;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.swing.*;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
@@ -15,10 +14,18 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.kordamp.ikonli.octicons.Octicons;
 import org.kordamp.ikonli.swing.FontIcon;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 import de.fb.adc_monitor.annotations.SwingView;
 import de.fb.adc_monitor.controller.MainWindowController;
+import de.fb.adc_monitor.util.Constants;
 import de.fb.adc_monitor.util.RenderUtils;
 import de.fb.adc_monitor.view.component.JHeapMonitor;
+import de.fb.adc_monitor.view.component.ZoomableChartView;
+import info.monitorenter.gui.chart.ITrace2D;
+import info.monitorenter.gui.chart.ITracePoint2D;
 
 @SwingView
 public class MainWindow extends JFrame {
@@ -26,10 +33,17 @@ public class MainWindow extends JFrame {
     @Autowired
     private MainWindowController controller;
 
+    private JPanel controlPanel;
+    private JHeapMonitor heapMonitorPanel;
+
     private JButton connectButton;
     private JButton stopButton;
-    private JButton runButton;
+    private JButton startButton;
     private JButton exitButton;
+
+    private ZoomableChartView chartView;
+    private ITrace2D inputSignalTrace;
+    private ITrace2D filteredSignalTrace;
 
     /**
      * Create the frame.
@@ -46,9 +60,41 @@ public class MainWindow extends JFrame {
         connectEventHandlers();
     }
 
-    /**
-     * Initialize the contents of the frame.
-     */
+    private void updateChart(final ITracePoint2D inputSample, final ITracePoint2D filteredSample) {
+
+        SwingUtilities.invokeLater(() -> {
+            inputSignalTrace.addPoint(inputSample);
+            filteredSignalTrace.addPoint(filteredSample);
+            // TODO: derived traces?
+        });
+    }
+
+    private void clearChart() {
+        inputSignalTrace.removeAllPoints();
+        filteredSignalTrace.removeAllPoints();
+    }
+
+    private void createChart() {
+
+        chartView = new ZoomableChartView();
+        chartView.setXaxisTitle("TIME, s", Color.WHITE);
+        chartView.setYaxisTitle("VOLTAGE, V", Color.WHITE);
+
+        inputSignalTrace = chartView.addLtdTrace("input signal", Color.CYAN, Constants.NUM_GRAPH_DATA_POINTS);
+        filteredSignalTrace = chartView.addLtdTrace("filtered signal", Color.YELLOW, Constants.NUM_GRAPH_DATA_POINTS);
+    }
+
+    private void createHeapMonitor() {
+        heapMonitorPanel = new JHeapMonitor();
+        heapMonitorPanel.setPreferredSize(new Dimension(496, 105));
+        heapMonitorPanel.setBorder(new CompoundBorder(new EmptyBorder(5, 10, 10, 5),
+            new TitledBorder(
+                UIManager.getBorder("TitledBorder.border"), "Memory usage monitor",
+                TitledBorder.LEADING, TitledBorder.TOP, null)));
+
+        heapMonitorPanel.setEnabled(true);
+    }
+
     private void initializeUI() {
 
         this.setTitle("Arduino ADC Serial Monitor");
@@ -64,69 +110,68 @@ public class MainWindow extends JFrame {
         this.getContentPane().add(leftPane, BorderLayout.CENTER);
         leftPane.setLayout(new BorderLayout(0, 0));
 
-        JHeapMonitor heapMonitorPanel = new JHeapMonitor();
-        heapMonitorPanel.setPreferredSize(new Dimension(496, 105));
-        heapMonitorPanel.setBorder(new CompoundBorder(new EmptyBorder(5, 10, 10, 5),
-            new TitledBorder(
-                UIManager.getBorder("TitledBorder.border"), "Memory usage monitor",
-                TitledBorder.LEADING, TitledBorder.TOP, null)));
+        createChart();
+        leftPane.add(chartView, BorderLayout.CENTER);
 
-        heapMonitorPanel.setEnabled(true);
+        createHeapMonitor();
         leftPane.add(heapMonitorPanel, BorderLayout.SOUTH);
 
-        JPanel controlPanel = new JPanel();
-        controlPanel.setBorder(new CompoundBorder(new EmptyBorder(10, 10, 10, 10), new EtchedBorder(EtchedBorder.LOWERED, null,
-            null)));
+        createControlPanel();
         this.getContentPane().add(controlPanel, BorderLayout.EAST);
+        controlPanel.setLayout(new FormLayout(new ColumnSpec[] {
+            FormSpecs.RELATED_GAP_COLSPEC,
+            ColumnSpec.decode("121px"),
+            FormSpecs.RELATED_GAP_COLSPEC,
+        },
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),
+                RowSpec.decode("43px"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("50px"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("46px"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("52px"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+        }));
+        controlPanel.add(connectButton, "2, 3, fill, fill");
+        controlPanel.add(startButton, "2, 5, fill, fill");
+        controlPanel.add(stopButton, "2, 7, fill, fill");
+        controlPanel.add(exitButton, "2, 9, fill, fill");
+    }
+
+    private void createControlPanel() {
+
+        controlPanel = new JPanel();
+        controlPanel.setBorder(new CompoundBorder(new EmptyBorder(10, 10, 10, 10),
+            new EtchedBorder(EtchedBorder.LOWERED, null, null)));
 
         connectButton = new JButton("Connect");
         connectButton.setIcon(FontIcon.of(Octicons.RADIO_TOWER, DarculaUiColors.LIGHT_GRAY));
 
-        runButton = new JButton("Start");
+        startButton = new JButton("Start");
         stopButton = new JButton("Stop");
 
         exitButton = new JButton("Exit");
         exitButton.setIcon(FontIcon.of(Octicons.SIGN_OUT, DarculaUiColors.LIGHT_GRAY));
-
-        GroupLayout gl_controlPanel = new GroupLayout(controlPanel);
-        gl_controlPanel.setHorizontalGroup(
-            gl_controlPanel.createParallelGroup(Alignment.TRAILING)
-            .addGroup(gl_controlPanel.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(gl_controlPanel.createParallelGroup(Alignment.LEADING)
-                    .addComponent(connectButton, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
-                    .addComponent(runButton, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
-                    .addComponent(stopButton, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
-                    .addComponent(exitButton, GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE))
-                .addContainerGap()));
-        gl_controlPanel.setVerticalGroup(
-            gl_controlPanel.createParallelGroup(Alignment.LEADING)
-            .addGroup(Alignment.TRAILING, gl_controlPanel.createSequentialGroup()
-                .addContainerGap(487, Short.MAX_VALUE)
-                .addComponent(connectButton, GroupLayout.PREFERRED_SIZE, 43, GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(ComponentPlacement.RELATED)
-                .addComponent(runButton, GroupLayout.PREFERRED_SIZE, 50, GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(ComponentPlacement.RELATED)
-                .addComponent(stopButton, GroupLayout.PREFERRED_SIZE, 46, GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(ComponentPlacement.RELATED)
-                .addComponent(exitButton, GroupLayout.PREFERRED_SIZE, 52, GroupLayout.PREFERRED_SIZE)
-                .addContainerGap()));
-        controlPanel.setLayout(gl_controlPanel);
-        heapMonitorPanel.setEnabled(true);
     }
 
     private void connectEventHandlers() {
+
+        controller.setUpdateChartCallback(this::updateChart);
+        controller.setClearChartCallback(this::clearChart);
 
         connectButton.addActionListener(event -> {
             showSerialPortDialog();
         });
 
-        runButton.addActionListener(event -> {
-
+        startButton.addActionListener(event -> {
+            controller.start();
         });
 
         stopButton.addActionListener(event -> {
-
+            controller.stop();
         });
 
         exitButton.addActionListener(event -> {
