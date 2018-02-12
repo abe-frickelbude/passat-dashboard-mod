@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
+import javax.annotation.PostConstruct;
+import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import de.fb.adc_monitor.service.ArduinoLinkService;
+import de.fb.adc_monitor.util.ConcurrentCircularFifoQueue;
+import de.fb.adc_monitor.util.Constants;
 import de.fb.adc_monitor.util.TimeUtils;
 import de.fb.adc_monitor.view.SerialPortParams;
 import info.monitorenter.gui.chart.ITracePoint2D;
@@ -18,6 +22,10 @@ import info.monitorenter.gui.chart.TracePoint2D;
 
 /**
  * Controller and glue logic for the MainWindow view class.
+ * 
+ * Note on ADC sample buffer strategy: the sample buffer is a circular FIFO buffer, and once the ArduinoLinkService starts
+ * listening on analog pins, will generally fill up a lot quicker than the chart update routine can consume them, so
+ * depending on graph update frequency, some samples may be lost.
  * 
  * @author ibragim
  * 
@@ -28,7 +36,8 @@ public class MainWindowController {
 
     private static final Logger log = LoggerFactory.getLogger(MainWindowController.class);
 
-    private static final int INPUT_PIN = 0; // ?
+    private static final int SAMPLE_BUFFER_SIZE = Constants.SAMPLE_BUFFER_SIZE;
+    private static final int INPUT_PIN = Constants.PIN_A0;
 
     @Autowired
     private ApplicationContext appContext;
@@ -39,10 +48,16 @@ public class MainWindowController {
     private final AtomicBoolean updateActive;
     private final AtomicLong startTime;
 
+    private final ConcurrentCircularFifoQueue<Integer> adcSampleBuffer;
+
     private BiConsumer<ITracePoint2D, ITracePoint2D> updateChartCallback;
     private Runnable clearChartCallback;
 
     public MainWindowController() {
+
+        final CircularFifoQueue<Integer> sampleQueue = new CircularFifoQueue<>(SAMPLE_BUFFER_SIZE);
+        adcSampleBuffer = new ConcurrentCircularFifoQueue<>(sampleQueue);
+
         updateActive = new AtomicBoolean(false);
         startTime = new AtomicLong(0);
     }
@@ -52,12 +67,14 @@ public class MainWindowController {
             startTime.set(System.nanoTime());
             clearChartCallback.run();
             updateActive.set(true);
+            arduinoLinkService.startListening(INPUT_PIN);
         }
     }
 
     public void stop() {
         if (updateActive.get()) {
             updateActive.set(false);
+            arduinoLinkService.stopListening(INPUT_PIN);
         }
     }
 
@@ -92,19 +109,29 @@ public class MainWindowController {
         System.exit(0);
     }
 
-    @Scheduled(fixedRate = 10)
+    @Scheduled(fixedRate = Constants.GRAPH_UPDATE_PERIOD)
     public void updateChart() {
 
         if (updateActive.get()) {
 
             double currentTime = TimeUtils.nanosToSeconds(System.nanoTime() - startTime.get());
+            Integer nextSample = adcSampleBuffer.poll();
 
-            ////////////////////// TEST //////////////////////////////////
-
-            TracePoint2D point1 = new TracePoint2D(currentTime, Math.sin(2 * Math.PI * currentTime));
-            TracePoint2D point2 = new TracePoint2D(currentTime, Math.cos(2 * Math.PI * currentTime));
-
-            updateChartCallback.accept(point1, point2);
+            if (nextSample != null) {
+                final TracePoint2D point1 = new TracePoint2D(currentTime, 1.0 * adcSampleBuffer.poll());
+                final TracePoint2D point2 = new TracePoint2D(currentTime, 0.0);
+                updateChartCallback.accept(point1, point2);
+            }
         }
     }
+
+    @PostConstruct
+    private void init() {
+        arduinoLinkService.setAdcSampleConsumer(INPUT_PIN, this::updateSampleBuffer);
+    }
+
+    private void updateSampleBuffer(final Integer sample) {
+        adcSampleBuffer.offer(sample);
+    }
+
 }

@@ -1,10 +1,8 @@
 package de.fb.adc_monitor.service;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import javax.annotation.PostConstruct;
+import java.util.*;
+import java.util.function.Consumer;
 import javax.annotation.PreDestroy;
 import org.apache.commons.lang3.ArrayUtils;
 import org.ardulink.core.Link;
@@ -18,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import de.fb.adc_monitor.util.Constants;
 import de.fb.adc_monitor.view.SerialPortParams;
 import jssc.SerialPortList;
 
@@ -25,6 +24,10 @@ import jssc.SerialPortList;
  * Wrapper for ArduLink API facilities.
  * 
  * Warning: this is a stateful component that holds the current open connection to an Arduino serial port!
+ *
+ * Due to Ardulink API specifics, there also a lot more boilerplate code in here than would be strictly necessary!
+ * E.g. event listeners can only be registered on a Link when the link is open, which requires some care in the
+ * startListening() and stopListening() methods.
  * 
  * @author Ibragim Kuliev
  *
@@ -36,11 +39,19 @@ public class ArduinoLinkService {
 
     private Link serialLink;
 
+    private final Map<Integer, EventListener> eventListeners;
+    private final Map<Integer, Consumer<Integer>> adcSampleConsumers;
+
     @Value("${arduino.connect.ping}")
     private Boolean pingProbe;
 
     @Value("${arduino.connect.timeout}")
     private Integer waitTimeout;
+
+    public ArduinoLinkService() {
+        adcSampleConsumers = new HashMap<>();
+        eventListeners = new HashMap<>();
+    }
 
     public List<String> getAvailablePorts() {
 
@@ -67,8 +78,6 @@ public class ArduinoLinkService {
 
         serialLink = Links.getLink(URIs.newURI(portConfig));
         log.info("Connected!");
-
-        testAdc();
     }
 
     public void disconnect() {
@@ -82,44 +91,85 @@ public class ArduinoLinkService {
         }
     }
 
-    public int readAdcSample(final int pin) {
-
-        return 0;
+    public void setAdcSampleConsumer(final Integer pin, final Consumer<Integer> consumer) {
+        adcSampleConsumers.put(pin, consumer);
     }
 
-    @PostConstruct
-    private void init() {
+    public void removeAdcSampleConsumer(final Integer pin) {
+        if (adcSampleConsumers.containsKey(pin)) {
+            adcSampleConsumers.remove(pin);
+            removeEventListener(pin);
+        }
+    }
 
+    public void startListening(final Integer pin) {
+
+        if (serialLink != null) {
+            try {
+                Consumer<Integer> sampleConsumer = adcSampleConsumers.get(pin);
+                final EventListener listener = new EventListener() {
+
+                    @Override
+                    public void stateChanged(final DigitalPinValueChangedEvent event) {
+                        // NO-OP
+                    }
+
+                    @Override
+                    public void stateChanged(final AnalogPinValueChangedEvent event) {
+                        sampleConsumer.accept(event.getValue());
+                    }
+                };
+
+                serialLink.addListener(listener);
+                eventListeners.put(pin, listener);
+
+                final Pin adcPin = Pin.analogPin(pin);
+                serialLink.startListening(adcPin);
+
+            } catch (IOException ex) {
+                log.error(ex.getMessage(), ex);
+            }
+        }
+    }
+
+    public void stopListening(final Integer pin) {
+
+        if (serialLink != null) {
+            try {
+                final Pin adcPin = Pin.analogPin(pin);
+                serialLink.stopListening(adcPin);
+                removeEventListener(pin);
+
+            } catch (IOException ex) {
+                log.error(ex.getMessage(), ex);
+            }
+        }
+    }
+
+    public void stopAll() {
+        for (int pin : Constants.ANALOG_PINS) {
+            stopListening(pin);
+        }
     }
 
     @PreDestroy
     private void cleanUp() {
+        // stopAll();
         disconnect();
+        adcSampleConsumers.clear();
     }
 
-    private void testAdc() {
+    private void removeEventListener(final Integer pin) {
 
-        try {
-
-            serialLink.addListener(new EventListener() {
-
-                @Override
-                public void stateChanged(final DigitalPinValueChangedEvent event) {
+        if (serialLink != null && eventListeners.containsKey(pin)) {
+            EventListener listener = eventListeners.remove(pin);
+            if (listener != null) {
+                try {
+                    serialLink.removeListener(listener);
+                } catch (IOException ex) {
+                    log.error(ex.getMessage(), ex);
                 }
-
-                @Override
-                @SuppressWarnings("synthetic-access")
-                public void stateChanged(final AnalogPinValueChangedEvent event) {
-                    log.info("Current ADC value: {}", event.getValue());
-                }
-            });
-
-            Pin adcPin = Pin.analogPin(0);
-            serialLink.startListening(adcPin);
-
-        } catch (Exception ex) {
-            log.error(ex.getMessage(), ex);
+            }
         }
     }
-
 }
