@@ -2,14 +2,8 @@ package de.fb.adc_monitor.view.filter;
 
 import static de.fb.adc_monitor.view.filter.GuiUtils.*;
 import java.awt.Dimension;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.JTextField;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.*;
+import com.jgoodies.forms.layout.*;
 import de.fb.adc_monitor.math.KalmanFilter;
 
 public class KalmanControlBox extends JPanel {
@@ -54,7 +48,7 @@ public class KalmanControlBox extends JPanel {
             FormSpecs.RELATED_GAP_COLSPEC,
             FormSpecs.DEFAULT_COLSPEC,
             FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,
-            ColumnSpec.decode("300px:grow"),
+            ColumnSpec.decode("200px:grow"),
             FormSpecs.RELATED_GAP_COLSPEC,
             ColumnSpec.decode("default:grow"),
             FormSpecs.RELATED_GAP_COLSPEC,
