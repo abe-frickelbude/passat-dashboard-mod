@@ -32,7 +32,7 @@ public final class Constants {
     };
 
     // with st. AREF of 5V the Atmega ADC has approx. 4.8 mV resolution.
-    public static final float ADC_VALUE_SCALE_FACTOR = 5.0f / 1024.0f;
+    public static final float ADC_RESOLUTION = 5.0f / 1024.0f;
 
     private Constants() {
 

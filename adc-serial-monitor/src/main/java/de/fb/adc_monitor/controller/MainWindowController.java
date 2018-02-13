@@ -2,11 +2,12 @@ package de.fb.adc_monitor.controller;
 
 import java.util.*;
 import java.util.concurrent.atomic.*;
-import java.util.function.*;
+import java.util.function.Consumer;
 import javax.annotation.*;
 import javax.swing.JPanel;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.lang3.tuple.*;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -14,9 +15,9 @@ import org.springframework.stereotype.Component;
 import de.fb.adc_monitor.math.*;
 import de.fb.adc_monitor.service.ArduinoLinkService;
 import de.fb.adc_monitor.util.*;
-import de.fb.adc_monitor.view.SerialPortParams;
+import de.fb.adc_monitor.view.*;
 import de.fb.adc_monitor.view.filter.*;
-import info.monitorenter.gui.chart.*;
+import info.monitorenter.gui.chart.TracePoint2D;
 
 /**
  * Controller and glue logic for the MainWindow view class.
@@ -48,17 +49,24 @@ public class MainWindowController {
     private final AtomicLong startTime;
 
     private final ConcurrentCircularFifoQueue<Integer> adcSampleBuffer;
+    private final DescriptiveStatistics signalStatistics;
+
+    private AtomicBoolean usePreFilterThreshold;
+    private AtomicBoolean usePostFilterThreshold;
 
     private Thread chartUpdateThread;
     private AtomicBoolean viewDisposed;
 
-    private BiConsumer<ITracePoint2D, ITracePoint2D> updateChartCallback;
+    private Consumer<JPanel> selectFilterCallback;
+    private Consumer<TraceData> updateChartCallback;
     private Runnable clearChartCallback;
 
     // maps filter type -> filter and its associated parameter control box
     private Map<FilterType, Pair<SignalFilter, JPanel>> signalFilterMap;
     private AtomicReference<SignalFilter> currentFilter;
-    private Consumer<JPanel> selectFilterCallback;
+
+    private SampleAndThresholdFilter preThresholdFilter;
+    private SampleAndThresholdFilter postThresholdFilter;
 
     public MainWindowController() {
 
@@ -66,6 +74,10 @@ public class MainWindowController {
 
         final CircularFifoQueue<Integer> sampleQueue = new CircularFifoQueue<>(SAMPLE_BUFFER_SIZE);
         adcSampleBuffer = new ConcurrentCircularFifoQueue<>(sampleQueue);
+
+        signalStatistics = new DescriptiveStatistics(SAMPLE_BUFFER_SIZE);
+        usePreFilterThreshold = new AtomicBoolean(false);
+        usePostFilterThreshold = new AtomicBoolean(false);
 
         updateFrequency = new AtomicInteger(Constants.DEFAULT_DISPLAY_UPDATE_FREQUENCY);
         updateActive = new AtomicBoolean(false);
@@ -81,6 +93,7 @@ public class MainWindowController {
         if (!updateActive.get()) {
             startTime.set(System.nanoTime());
             clearChartCallback.run();
+            signalStatistics.clear();
             updateActive.set(true);
             arduinoLinkService.startListening(INPUT_PIN);
         }
@@ -97,7 +110,20 @@ public class MainWindowController {
         updateFrequency.set(frequency);
     }
 
-    public void setUpdateChartCallback(final BiConsumer<ITracePoint2D, ITracePoint2D> callback) {
+    public void setUsePreFilterThreshold(final boolean enabled) {
+        usePreFilterThreshold.set(enabled);
+    }
+
+    public void setUsePostFilterThreshold(final boolean enabled) {
+        usePostFilterThreshold.set(enabled);
+    }
+
+    public void setThresholdValue(final double value) {
+        preThresholdFilter.setThreshold(value);
+        postThresholdFilter.setThreshold(value);
+    }
+
+    public void setUpdateChartCallback(final Consumer<TraceData> callback) {
         this.updateChartCallback = callback;
     }
 
@@ -147,6 +173,8 @@ public class MainWindowController {
         signalFilterMap = new HashMap<>();
 
         SimpleExponentialFilter filter1 = new SimpleExponentialFilter();
+        filter1.setSmoothingFactor(SimpleExponentialControlBox.MIN_SMOOTHING_FACTOR);
+
         SimpleExponentialControlBox box1 = new SimpleExponentialControlBox(filter1);
         signalFilterMap.put(FilterType.SIMPLE_EXPONENTIAL, new ImmutablePair<SignalFilter, JPanel>(filter1, box1));
 
@@ -159,28 +187,59 @@ public class MainWindowController {
         signalFilterMap.put(FilterType.KALMAN, new ImmutablePair<SignalFilter, JPanel>(filter3, box3));
 
         currentFilter = new AtomicReference<>(signalFilterMap.get(FilterType.SIMPLE_EXPONENTIAL).getLeft());
+
+        preThresholdFilter = new SampleAndThresholdFilter();
+        preThresholdFilter.setThreshold(2 * Constants.ADC_RESOLUTION);
+
+        postThresholdFilter = new SampleAndThresholdFilter();
+        postThresholdFilter.setThreshold(2 * Constants.ADC_RESOLUTION);
     }
 
     private void updateChart() {
 
-        // viewDisposed is used for thread shutdown
+        // viewDisposed is used for graceful thread shutdown
         while (viewDisposed.get() == false) {
 
             final long localStart = System.nanoTime();
-
             if (updateActive.get()) {
+
                 double currentTime = TimeUtils.nanosToSeconds(System.nanoTime() - startTime.get());
                 Integer nextSample = adcSampleBuffer.poll();
 
                 if (nextSample != null) {
 
-                    final double voltageSample = AdcUtils.mapAdcSampleToVoltage(nextSample);
-                    final TracePoint2D point1 = new TracePoint2D(currentTime, voltageSample);
+                    double voltageSample = AdcUtils.mapAdcSampleToVoltage(nextSample);
 
-                    final double filteredSample = currentFilter.get().addValue(voltageSample);
-                    final TracePoint2D point2 = new TracePoint2D(currentTime, filteredSample);
+                    if (usePreFilterThreshold.get() == true) {
+                        voltageSample = preThresholdFilter.addValue(voltageSample);
+                    }
 
-                    updateChartCallback.accept(point1, point2);
+                    TracePoint2D inputPoint = new TracePoint2D(currentTime, voltageSample);
+
+                    double filteredSample = currentFilter.get().addValue(voltageSample);
+
+                    if (usePostFilterThreshold.get() == true) {
+                        filteredSample = postThresholdFilter.addValue(filteredSample);
+                    }
+
+                    TracePoint2D filteredPoint = new TracePoint2D(currentTime, filteredSample);
+
+                    signalStatistics.addValue(filteredSample);
+
+                    TracePoint2D minPoint = new TracePoint2D(currentTime, signalStatistics.getMin());
+                    TracePoint2D maxPoint = new TracePoint2D(currentTime, signalStatistics.getMax());
+                    TracePoint2D rmsPoint = new TracePoint2D(currentTime, signalStatistics.getQuadraticMean());
+
+                    final TraceData traceData = new TraceData();
+
+                    traceData.setInputPoint(inputPoint);
+                    traceData.setFilteredPoint(filteredPoint);
+
+                    traceData.setMinPoint(minPoint);
+                    traceData.setMaxPoint(maxPoint);
+                    traceData.setRmsPoint(rmsPoint);
+
+                    updateChartCallback.accept(traceData);
                 }
             }
 
@@ -224,4 +283,5 @@ public class MainWindowController {
     private void updateSampleBuffer(final Integer sample) {
         adcSampleBuffer.offer(sample);
     }
+
 }

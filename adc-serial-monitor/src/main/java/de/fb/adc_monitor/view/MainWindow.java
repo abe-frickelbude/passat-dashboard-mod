@@ -15,7 +15,7 @@ import de.fb.adc_monitor.controller.MainWindowController;
 import de.fb.adc_monitor.math.FilterType;
 import de.fb.adc_monitor.util.*;
 import de.fb.adc_monitor.view.component.*;
-import info.monitorenter.gui.chart.*;
+import info.monitorenter.gui.chart.ITrace2D;
 
 @SwingView
 public class MainWindow extends JFrame {
@@ -33,14 +33,29 @@ public class MainWindow extends JFrame {
     private JComboBox<FilterType> filterSelectionBox;
     private JPanel filterControlPanel;
 
+    private JCheckBox showInputTraceCheckBox;
+    private JCheckBox showRmsTraceCheckBox;
+    private JCheckBox showFilteredTraceCheckBox;
+    private JCheckBox showMinTraceCheckBox;
+    private JCheckBox showMaxTraceCheckBox;
+
+    private JCheckBox preFilterThresholdCheckBox;
+    private JCheckBox postFilterThresholdCheckBox;
+    private JTextField thresholdValueField;
+
     private JButton connectButton;
     private JButton stopButton;
     private JButton startButton;
     private JButton exitButton;
 
     private ZoomableChartView chartView;
+
     private ITrace2D inputSignalTrace;
     private ITrace2D filteredSignalTrace;
+    private ITrace2D minSignalTrace;
+    private ITrace2D maxSignalTrace;
+    private ITrace2D rmsSignalTrace;
+    private JLabel thresholdValueLabel;
 
     /**
      * Create the frame.
@@ -57,12 +72,14 @@ public class MainWindow extends JFrame {
         connectEventHandlers();
     }
 
-    private void updateChart(final ITracePoint2D inputSample, final ITracePoint2D filteredSample) {
+    private void updateChart(final TraceData traceData) {
 
         SwingUtilities.invokeLater(() -> {
-            inputSignalTrace.addPoint(inputSample);
-            filteredSignalTrace.addPoint(filteredSample);
-            // TODO: derived traces?
+            inputSignalTrace.addPoint(traceData.getInputPoint());
+            filteredSignalTrace.addPoint(traceData.getFilteredPoint());
+            minSignalTrace.addPoint(traceData.getMinPoint());
+            maxSignalTrace.addPoint(traceData.getMaxPoint());
+            rmsSignalTrace.addPoint(traceData.getRmsPoint());
         });
     }
 
@@ -79,9 +96,18 @@ public class MainWindow extends JFrame {
 
         inputSignalTrace = chartView.addLtdTrace("input signal", Color.CYAN, Constants.NUM_GRAPH_DATA_POINTS);
         filteredSignalTrace = chartView.addLtdTrace("filtered signal", Color.YELLOW, Constants.NUM_GRAPH_DATA_POINTS);
+
+        minSignalTrace = chartView.addLtdTrace("min", Color.GREEN, Constants.NUM_GRAPH_DATA_POINTS, 99);
+        maxSignalTrace = chartView.addLtdTrace("max", Color.GREEN, Constants.NUM_GRAPH_DATA_POINTS, 99);
+        rmsSignalTrace = chartView.addLtdTrace("RMS", Color.RED, Constants.NUM_GRAPH_DATA_POINTS, 99);
+
+        minSignalTrace.setVisible(false);
+        maxSignalTrace.setVisible(false);
+        rmsSignalTrace.setVisible(false);
     }
 
     private void createHeapMonitor() {
+
         heapMonitorPanel = new JHeapMonitor();
         heapMonitorPanel.setPreferredSize(new Dimension(496, 105));
         heapMonitorPanel.setBorder(new CompoundBorder(new EmptyBorder(5, 10, 10, 5),
@@ -176,6 +202,8 @@ public class MainWindow extends JFrame {
                 RowSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),
                 RowSpec.decode("43px"),
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("50px"),
@@ -198,10 +226,81 @@ public class MainWindow extends JFrame {
         exitButton = new JButton("Exit");
         exitButton.setIcon(FontIcon.of(Octicons.SIGN_OUT, DarculaUiColors.LIGHT_GRAY));
 
-        controlPanel.add(connectButton, "2, 15, fill, fill");
-        controlPanel.add(startButton, "2, 17, fill, fill");
-        controlPanel.add(stopButton, "2, 19, fill, fill");
-        controlPanel.add(exitButton, "2, 21, fill, fill");
+        createTraceOptionPanel();
+
+        controlPanel.add(connectButton, "2, 17, fill, fill");
+        controlPanel.add(startButton, "2, 19, fill, fill");
+        controlPanel.add(stopButton, "2, 21, fill, fill");
+        controlPanel.add(exitButton, "2, 23, fill, fill");
+    }
+
+    private void createTraceOptionPanel() {
+
+        final JPanel traceOptionPanel = new JPanel();
+        controlPanel.add(traceOptionPanel, "2, 14, fill, fill");
+        traceOptionPanel.setLayout(new FormLayout(new ColumnSpec[] {
+            FormSpecs.RELATED_GAP_COLSPEC,
+            FormSpecs.DEFAULT_COLSPEC,
+            FormSpecs.RELATED_GAP_COLSPEC,
+            FormSpecs.DEFAULT_COLSPEC,
+            FormSpecs.RELATED_GAP_COLSPEC,
+            FormSpecs.DEFAULT_COLSPEC,
+            FormSpecs.RELATED_GAP_COLSPEC,
+            ColumnSpec.decode("default:grow"),
+            FormSpecs.RELATED_GAP_COLSPEC,
+            FormSpecs.DEFAULT_COLSPEC,
+            FormSpecs.RELATED_GAP_COLSPEC,
+            FormSpecs.DEFAULT_COLSPEC,
+            FormSpecs.RELATED_GAP_COLSPEC,
+            FormSpecs.DEFAULT_COLSPEC,
+            FormSpecs.RELATED_GAP_COLSPEC,
+            FormSpecs.DEFAULT_COLSPEC,
+        },
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+        }));
+
+        showInputTraceCheckBox = new JCheckBox("Show input trace");
+        showInputTraceCheckBox.setSelected(true);
+        traceOptionPanel.add(showInputTraceCheckBox, "2, 4");
+
+        preFilterThresholdCheckBox = new JCheckBox("Pre-filter threshold");
+        traceOptionPanel.add(preFilterThresholdCheckBox, "8, 4");
+
+        showRmsTraceCheckBox = new JCheckBox("Show RMS trace");
+        traceOptionPanel.add(showRmsTraceCheckBox, "2, 6");
+
+        postFilterThresholdCheckBox = new JCheckBox("Post-filter threshold");
+        traceOptionPanel.add(postFilterThresholdCheckBox, "8, 6");
+
+        showFilteredTraceCheckBox = new JCheckBox("Show filtered trace");
+        showFilteredTraceCheckBox.setSelected(true);
+        traceOptionPanel.add(showFilteredTraceCheckBox, "2, 8");
+
+        thresholdValueField = new JTextField();
+        thresholdValueField.setText(String.valueOf(4.8));
+        traceOptionPanel.add(thresholdValueField, "8, 8, left, default");
+        thresholdValueField.setColumns(10);
+
+        thresholdValueLabel = new JLabel("mV");
+        traceOptionPanel.add(thresholdValueLabel, "10, 8");
+
+        showMinTraceCheckBox = new JCheckBox("Show MIN trace");
+        traceOptionPanel.add(showMinTraceCheckBox, "2, 10");
+
+        showMaxTraceCheckBox = new JCheckBox("Show MAX trace");
+        traceOptionPanel.add(showMaxTraceCheckBox, "2, 12");
     }
 
     private void setFilterControlBox(final JPanel controlBox) {
@@ -217,6 +316,50 @@ public class MainWindow extends JFrame {
         controller.setUpdateChartCallback(this::updateChart);
         controller.setClearChartCallback(this::clearChart);
         controller.setSelectFilterCallback(this::setFilterControlBox);
+
+        refreshRateSlider.addChangeListener(event -> {
+            refreshRateField.setText(String.valueOf(refreshRateSlider.getValue()));
+            controller.setUpdateFrequency(refreshRateSlider.getValue());
+        });
+
+        filterSelectionBox.addActionListener(event -> {
+            FilterType filterType = (FilterType) filterSelectionBox.getSelectedItem();
+            controller.selectFilter(filterType);
+        });
+
+        showInputTraceCheckBox.addActionListener(event -> {
+            inputSignalTrace.setVisible(showInputTraceCheckBox.isSelected());
+        });
+
+        showFilteredTraceCheckBox.addActionListener(event -> {
+            filteredSignalTrace.setVisible(showFilteredTraceCheckBox.isSelected());
+        });
+
+        showRmsTraceCheckBox.addActionListener(event -> {
+            rmsSignalTrace.setVisible(showRmsTraceCheckBox.isSelected());
+        });
+
+        showMinTraceCheckBox.addActionListener(event -> {
+            minSignalTrace.setVisible(showMinTraceCheckBox.isSelected());
+        });
+
+        showMaxTraceCheckBox.addActionListener(event -> {
+            maxSignalTrace.setVisible(showMaxTraceCheckBox.isSelected());
+        });
+
+        preFilterThresholdCheckBox.addActionListener(event -> {
+            controller.setUsePreFilterThreshold(preFilterThresholdCheckBox.isSelected());
+        });
+
+        postFilterThresholdCheckBox.addActionListener(event -> {
+            controller.setUsePostFilterThreshold(postFilterThresholdCheckBox.isSelected());
+        });
+
+        thresholdValueField.addActionListener(event -> {
+            // the input box value is in mV!
+            double value = Double.parseDouble(thresholdValueField.getText()) / 1000.0;
+            controller.setThresholdValue(value);
+        });
 
         connectButton.addActionListener(event -> {
             showSerialPortDialog();
@@ -234,15 +377,6 @@ public class MainWindow extends JFrame {
             showExitDialog();
         });
 
-        refreshRateSlider.addChangeListener(event -> {
-            refreshRateField.setText(String.valueOf(refreshRateSlider.getValue()));
-            controller.setUpdateFrequency(refreshRateSlider.getValue());
-        });
-
-        filterSelectionBox.addActionListener(event -> {
-            FilterType filterType = (FilterType) filterSelectionBox.getSelectedItem();
-            controller.selectFilter(filterType);
-        });
     }
 
     private void showSerialPortDialog() {

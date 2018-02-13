@@ -8,6 +8,6 @@ public final class AdcUtils {
     }
 
     public static double mapAdcSampleToVoltage(final int adcSample) {
-        return adcSample * Constants.ADC_VALUE_SCALE_FACTOR;
+        return adcSample * Constants.ADC_RESOLUTION;
     }
 }

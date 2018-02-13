@@ -1,20 +1,14 @@
 package de.fb.adc_monitor.view.filter;
 
 import static de.fb.adc_monitor.view.filter.GuiUtils.*;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.JTextField;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.*;
+import com.jgoodies.forms.layout.*;
 import de.fb.adc_monitor.math.SimpleExponentialFilter;
 
 public class SimpleExponentialControlBox extends JPanel {
 
-    private static final double MIN_SMOOTHING_FACTOR = 0.0;
-    private static final double MAX_SMOOTHING_FACTOR = 1.0;
+    public static final double MIN_SMOOTHING_FACTOR = 0.010;
+    public static final double MAX_SMOOTHING_FACTOR = 0.25;
 
     private JSlider smoothingFactorSlider;
     private JTextField smoothingFactorField;
