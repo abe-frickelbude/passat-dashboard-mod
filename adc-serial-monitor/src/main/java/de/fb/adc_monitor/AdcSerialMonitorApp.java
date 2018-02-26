@@ -2,16 +2,13 @@ package de.fb.adc_monitor;
 
 import java.awt.EventQueue;
 import javax.swing.UIManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import com.bulenkov.darcula.DarculaLaf;
 import de.fb.adc_monitor.config.AppContextConfiguration;
-import de.fb.adc_monitor.view.LogWindow;
-import de.fb.adc_monitor.view.MainWindow;
-import de.fb.adc_monitor.view.UILayouter;
+import de.fb.adc_monitor.view.*;
 
 /**
  * This class essentially ties together Spring application context initialization and any auxiliary initialization of
@@ -48,12 +45,15 @@ public class AdcSerialMonitorApp {
             EventQueue.invokeLater(() -> {
                 try {
                     // show the UI windows
-                    MainWindow mainWindow = appContext.getBean(MainWindow.class);
-                    LogWindow logWindow = appContext.getBean(LogWindow.class);
+                    final MainWindow mainWindow = appContext.getBean(MainWindow.class);
+                    final ControlWindow controlWindow = appContext.getBean(ControlWindow.class);
+                    final LogWindow logWindow = appContext.getBean(LogWindow.class);
+
                     UILayouter uiLayouter = appContext.getBean(UILayouter.class);
 
-                    uiLayouter.layoutWindows(false, 0.7f);
+                    uiLayouter.layoutWindows(false, 0.7f, 0.6f);
                     mainWindow.setVisible(true);
+                    controlWindow.setVisible(true);
                     logWindow.setVisible(true);
 
                 } catch (Exception ex) {
