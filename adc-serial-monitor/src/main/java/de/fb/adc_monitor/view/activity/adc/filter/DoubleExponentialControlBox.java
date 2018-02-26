@@ -1,6 +1,6 @@
-package de.fb.adc_monitor.view.filter;
+package de.fb.adc_monitor.view.activity.adc.filter;
 
-import static de.fb.adc_monitor.view.filter.GuiUtils.*;
+import static de.fb.adc_monitor.util.GuiUtils.*;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;

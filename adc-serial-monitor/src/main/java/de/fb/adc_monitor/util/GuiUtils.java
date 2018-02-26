@@ -1,4 +1,4 @@
-package de.fb.adc_monitor.view.filter;
+package de.fb.adc_monitor.util;
 
 import javax.swing.JSlider;
 

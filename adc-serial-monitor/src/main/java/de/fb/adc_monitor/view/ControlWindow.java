@@ -5,7 +5,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import org.springframework.stereotype.Component;
 
-
 @Component
 public class ControlWindow extends JFrame {
 
@@ -22,8 +21,14 @@ public class ControlWindow extends JFrame {
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         contentPane.setLayout(new BorderLayout(0, 0));
         setContentPane(contentPane);
+    }
 
-        final JScrollPane scrollPane = new JScrollPane();
-        contentPane.add(scrollPane, BorderLayout.CENTER);
+    public void setControlPanel(final JPanel controlPanel) {
+        if (contentPane != null) {
+            contentPane.removeAll();
+            contentPane.add(controlPanel, BorderLayout.CENTER);
+            contentPane.revalidate();
+            this.repaint();
+        }
     }
 }

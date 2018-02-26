@@ -20,13 +20,11 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import de.fb.adc_monitor.math.*;
+import de.fb.adc_monitor.util.GuiUtils;
 import de.fb.adc_monitor.view.DarculaUiColors;
+import de.fb.adc_monitor.view.activity.adc.filter.*;
 import de.fb.adc_monitor.view.component.JHeapMonitor;
 import de.fb.adc_monitor.view.component.ZoomableChartView;
-import de.fb.adc_monitor.view.filter.DoubleExponentialControlBox;
-import de.fb.adc_monitor.view.filter.GuiUtils;
-import de.fb.adc_monitor.view.filter.KalmanControlBox;
-import de.fb.adc_monitor.view.filter.SimpleExponentialControlBox;
 import info.monitorenter.gui.chart.ITrace2D;
 
 public class FilterSandbox {
