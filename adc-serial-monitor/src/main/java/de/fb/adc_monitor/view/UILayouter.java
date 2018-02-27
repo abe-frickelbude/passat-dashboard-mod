@@ -1,6 +1,8 @@
 package de.fb.adc_monitor.view;
 
 import java.awt.*;
+import java.awt.event.*;
+import javax.annotation.PostConstruct;
 import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -135,5 +137,50 @@ public final class UILayouter {
             Math.round(displayHeight * (1.0f - heightRatio)) - VERTICAL_GAP);
 
         logWindow.setBounds(logWindowBounds);
+    }
+
+    @PostConstruct
+    private void init() {
+        registerWindowStateChangeEvents();
+    }
+
+    /**
+     * Synchronizes some primary window state changes with the aux windows, e.g. brings everything into foreground
+     * when the main window gains focus, or minimizes everything when the main window is minimized.
+     */
+    private void registerWindowStateChangeEvents() {
+
+        final MainWindow mainWindow = appContext.getBean(MainWindow.class);
+        final ControlWindow controlWindow = appContext.getBean(ControlWindow.class);
+        final LogWindow logWindow = appContext.getBean(LogWindow.class);
+
+        mainWindow.addWindowFocusListener(new WindowAdapter() {
+
+            @Override
+            public void windowGainedFocus(final WindowEvent event) {
+
+                if (mainWindow.isShowing()) {
+                    controlWindow.toFront();
+                    logWindow.toFront();
+                }
+            }
+        });
+
+        mainWindow.addWindowListener(new WindowAdapter() {
+
+            @Override
+            public void windowIconified(final WindowEvent e) {
+                controlWindow.setExtendedState(Frame.ICONIFIED);
+                logWindow.setExtendedState(Frame.ICONIFIED);
+            }
+
+            @Override
+            public void windowDeiconified(final WindowEvent e) {
+                controlWindow.setExtendedState(Frame.NORMAL);
+                logWindow.setExtendedState(Frame.NORMAL);
+                controlWindow.toFront();
+                logWindow.toFront();
+            }
+        });
     }
 }

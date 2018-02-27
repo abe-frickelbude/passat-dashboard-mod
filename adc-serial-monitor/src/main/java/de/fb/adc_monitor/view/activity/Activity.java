@@ -2,6 +2,11 @@ package de.fb.adc_monitor.view.activity;
 
 import javax.swing.*;
 
+/**
+ * 
+ * @author Ibragim Kuliev
+ *
+ */
 public interface Activity {
 
     String getTitle();
