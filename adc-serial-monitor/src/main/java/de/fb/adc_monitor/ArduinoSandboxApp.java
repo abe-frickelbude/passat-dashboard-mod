@@ -17,9 +17,9 @@ import de.fb.adc_monitor.view.*;
  * @author Ibragim Kuliev
  *
  */
-public class AdcSerialMonitorApp {
+public class ArduinoSandboxApp {
 
-    private static final Logger log = LoggerFactory.getLogger(AdcSerialMonitorApp.class);
+    private static final Logger log = LoggerFactory.getLogger(ArduinoSandboxApp.class);
 
     // singleton application context instance
     private static ConfigurableApplicationContext appContext;
