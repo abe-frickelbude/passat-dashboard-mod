@@ -1,20 +1,13 @@
 package de.fb.arduino_sandbox.view.component;
 
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
-import javax.swing.JColorChooser;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javax.swing.*;
+import javax.swing.event.*;
 import org.apache.commons.collections4.CollectionUtils;
 
 public class JColorSwatch extends JComponent {
@@ -197,8 +190,8 @@ public class JColorSwatch extends JComponent {
         }
     }
 
+    @SuppressWarnings("unused")
     private void handleDrags(final MouseEvent event) {
-
         // if (getBounds().contains(event.getPoint())) {
         // System.out.println(event.getPoint().toString());
         // }
@@ -210,18 +203,6 @@ public class JColorSwatch extends JComponent {
             setColor(newColor);
             fireChangeEvent();
         }
-    }
-
-    private void shiftHue() {
-
-    }
-
-    private void shiftSaturation() {
-
-    }
-
-    private void shiftValue() {
-
     }
 
     private void showInfoDialog() {

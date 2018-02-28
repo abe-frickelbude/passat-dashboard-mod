@@ -1,17 +1,11 @@
 package de.fb.arduino_sandbox.view.component;
 
 import java.awt.Color;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 import com.bulenkov.darcula.DarculaLaf;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.RowSpec;
-import de.fb.arduino_sandbox.view.component.JColorSwatch;
+import com.jgoodies.forms.layout.*;
 
 public class JColorSwatchTest {
 
@@ -44,7 +38,7 @@ public class JColorSwatchTest {
         final JColorSwatch swatch1 = new JColorSwatch();
         contentPane.add(swatch1, "2, 2, center, center");
 
-        final JColorSwatch swatch2 = JColorSwatch.Builder.create().color(Color.CYAN).build();
+        final JColorSwatch swatch2 = JColorSwatch.Builder.create().color(Color.CYAN).swatchSize(32).build();
         contentPane.add(swatch2, "1, 2, center, center");
 
         final JColorSwatch swatch3 = JColorSwatch.Builder.create().color(Color.GREEN).useCustomCursor(true).build();
