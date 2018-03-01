@@ -1,16 +1,19 @@
 package de.fb.arduino_sandbox.sandbox;
 
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Insets;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import de.fb.arduino_sandbox.view.component.JColorSwatch;
+import de.fb.arduino_sandbox.view.component.color.ColorSwatch;
 
 public class SandboxPanel extends JPanel {
 
@@ -22,29 +25,34 @@ public class SandboxPanel extends JPanel {
     private JSpinner spinner_3;
     private JSpinner spinner_4;
     private JSpinner spinner_5;
-    private JButton btnNewButton;
     private JButton btnX;
     private JButton btnX_1;
     private JButton btnX_2;
     private JButton btnX_3;
     private JButton btnX_4;
     private JButton btnNewButton_1;
+    private JButton button;
+    private ColorSwatch colorSwatch_1;
+    private ColorSwatch colorSwatch_2;
+    private ColorSwatch colorSwatch_3;
+    private ColorSwatch colorSwatch_4;
 
     /**
      * Create the panel.
      */
     public SandboxPanel() {
+        setMaximumSize(new Dimension(32, 32));
         setLayout(new FormLayout(new ColumnSpec[] {
             FormSpecs.RELATED_GAP_COLSPEC,
             FormSpecs.DEFAULT_COLSPEC,
             FormSpecs.RELATED_GAP_COLSPEC,
-            ColumnSpec.decode("max(30dlu;default)"),
+            ColumnSpec.decode("27dlu"),
             FormSpecs.RELATED_GAP_COLSPEC,
-            ColumnSpec.decode("max(30dlu;default)"),
+            ColumnSpec.decode("48px"),
             FormSpecs.RELATED_GAP_COLSPEC,
-            ColumnSpec.decode("max(30dlu;default)"),
+            ColumnSpec.decode("48px"),
             FormSpecs.RELATED_GAP_COLSPEC,
-            ColumnSpec.decode("max(30dlu;default)"),
+            ColumnSpec.decode("48px"),
             FormSpecs.RELATED_GAP_COLSPEC,
             ColumnSpec.decode("max(30dlu;default)"),
             FormSpecs.RELATED_GAP_COLSPEC,
@@ -56,24 +64,55 @@ public class SandboxPanel extends JPanel {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
+                RowSpec.decode("fill:48px"),
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),
         }));
 
-        colorSwatch = new JColorSwatch.Builder().swatchSize(40).build();
+        colorSwatch = new JColorSwatch.Builder().swatchSize(46).build();
         add(colorSwatch, "4, 4, center, default");
 
-        colorSwatch2 = new JColorSwatch.Builder().swatchSize(40).build();
-        colorSwatch2.setSize(new Dimension(32, 32));
+        colorSwatch2 = new JColorSwatch.Builder().swatchSize(46).build();
         add(colorSwatch2, "4, 6, center, default");
 
         spinner = new JSpinner();
         spinner.setFont(new Font("Dialog", Font.PLAIN, 9));
+
+        SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 999, 1);
+        spinner.setModel(model);
+
+        colorSwatch_1 = new ColorSwatch();
+        colorSwatch_1.setCornerRadius(16);
+        colorSwatch_1.setMaximumSize(new Dimension(32, 32));
+        colorSwatch_1.setPreferredSize(new Dimension(32, 32));
+        colorSwatch_1.setMinimumSize(new Dimension(32, 32));
+        // colorSwatch_1.setSwatchSize(32);
+        colorSwatch_1.setBorderColor(Color.WHITE);
+        add(colorSwatch_1, "6, 4, fill, fill");
+
+        colorSwatch_2 = new ColorSwatch();
+        colorSwatch_2.setCornerRadius(10);
+        colorSwatch_2.setBorderWidth(2);
+        colorSwatch_2.setPreferredSize(new Dimension(32, 32));
+        colorSwatch_2.setMinimumSize(new Dimension(32, 32));
+        colorSwatch_2.setMaximumSize(new Dimension(32, 32));
+        colorSwatch_2.setBorderColor(Color.WHITE);
+        add(colorSwatch_2, "8, 4, fill, fill");
+
+        colorSwatch_4 = new ColorSwatch();
+        colorSwatch_4.setPreferredSize(new Dimension(20, 16));
+        add(colorSwatch_4, "10, 4, center, fill");
+
+        // colorSwatch_3 = new ColorSwatch();
+        // add(colorSwatch_3, "10, 4");
+
         add(spinner, "4, 8, fill, default");
 
         spinner_1 = new JSpinner();
@@ -96,11 +135,10 @@ public class SandboxPanel extends JPanel {
         spinner_5.setFont(new Font("Dialog", Font.PLAIN, 9));
         add(spinner_5, "14, 8");
 
-        btnNewButton = new JButton("X");
-        btnNewButton.setMargin(new Insets(0, 0, 0, 0));
-        btnNewButton.setFont(new Font("Dialog", Font.BOLD, 9));
-        // btnNewButton.setIcon(FontIcon.of(Octicons.X, DarculaUiColors.LIGHT_GRAY));
-        add(btnNewButton, "4, 10, fill, default");
+        button = new JButton("X");
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setFont(new Font("Dialog", Font.BOLD, 9));
+        add(button, "4, 10, center, fill");
 
         btnX = new JButton("X");
         btnX.setFont(new Font("Dialog", Font.BOLD, 9));

@@ -2,11 +2,12 @@ package de.fb.arduino_sandbox.view.component;
 
 import java.awt.Color;
 import java.awt.Font;
+import javax.swing.JButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeListener;
 
-class RgbwSwatchGroup {
+final class RgbwSwatchGroup {
 
     private static final int SWATCH_SIZE = 46;
     private static final Font FONT = new Font("Dialog", Font.PLAIN, 9);
@@ -14,14 +15,17 @@ class RgbwSwatchGroup {
     private final JColorSwatch colorSwatch;
     private final JColorSwatch whiteSwatch;
     private final JSpinner groupSizeSpinner;
+    private final JButton removeButton;
 
     private RgbwSwatchGroup(final JColorSwatch colorSwatch,
         final JColorSwatch whiteSwatch,
-        final JSpinner groupSizeSpinner) {
+        final JSpinner groupSizeSpinner,
+        final JButton removeButton) {
         super();
         this.colorSwatch = colorSwatch;
         this.whiteSwatch = whiteSwatch;
         this.groupSizeSpinner = groupSizeSpinner;
+        this.removeButton = removeButton;
     }
 
     public static RgbwSwatchGroup create() {
@@ -34,7 +38,10 @@ class RgbwSwatchGroup {
         groupSizeSpinner.setModel(model);
         groupSizeSpinner.setFont(FONT);
 
-        return new RgbwSwatchGroup(colorSwatch, lumiSwatch, groupSizeSpinner);
+        final JButton removeButton = new JButton("-");
+        removeButton.setFont(FONT);
+
+        return new RgbwSwatchGroup(colorSwatch, lumiSwatch, groupSizeSpinner, removeButton);
     }
 
     public JColorSwatch getColorSwatch() {
@@ -47,6 +54,10 @@ class RgbwSwatchGroup {
 
     public JSpinner getGroupSizeSpinner() {
         return groupSizeSpinner;
+    }
+
+    public JButton getRemoveButton() {
+        return removeButton;
     }
 
     public Color getColor() {

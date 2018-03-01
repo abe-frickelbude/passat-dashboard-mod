@@ -65,7 +65,8 @@ public class LedGroupColorSwatch extends JPanel {
 
         this.add(swatchGroup.getColorSwatch(), "2, 2, center, default");
         this.add(swatchGroup.getWhiteSwatch(), "2, 4, center, default");
-        this.add(swatchGroup.getGroupSizeSpinner(), "2,6");
+        this.add(swatchGroup.getGroupSizeSpinner(), "2,6, fill, default");
+        this.add(swatchGroup.getRemoveButton(), "2,8, fill, default");
 
         layout.appendColumn(FormSpecs.RELATED_GAP_COLSPEC);
         layout.appendColumn(ColumnSpec.decode("48px"));
@@ -75,7 +76,8 @@ public class LedGroupColorSwatch extends JPanel {
 
         this.add(swatchGroup2.getColorSwatch(), "4, 2, center, default");
         this.add(swatchGroup2.getWhiteSwatch(), "4, 4, center, default");
-        this.add(swatchGroup2.getGroupSizeSpinner(), "4,6");
+        this.add(swatchGroup2.getGroupSizeSpinner(), "4,6, fill, default");
+        this.add(swatchGroup2.getRemoveButton(), "4,8, fill, default");
 
         // this.add(new JLabel("1"), "2,2, center, default");
         // this.add(new JColorSwatch.Builder().swatchSize(48).build(), "2,4, center, default");
