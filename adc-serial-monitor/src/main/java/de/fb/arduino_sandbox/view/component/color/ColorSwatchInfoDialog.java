@@ -1,4 +1,4 @@
-package de.fb.arduino_sandbox.view.component;
+package de.fb.arduino_sandbox.view.component.color;
 
 import java.awt.Color;
 import java.awt.Rectangle;

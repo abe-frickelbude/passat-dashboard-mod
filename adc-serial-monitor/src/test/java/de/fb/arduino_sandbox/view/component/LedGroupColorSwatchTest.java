@@ -9,6 +9,7 @@ import javax.swing.border.EmptyBorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.bulenkov.darcula.DarculaLaf;
+import de.fb.arduino_sandbox.view.component.color.LedGroupColorSwatch;
 
 public class LedGroupColorSwatchTest {
 
@@ -29,7 +30,7 @@ public class LedGroupColorSwatchTest {
         mainWindow.setContentPane(contentPane);
         contentPane.setLayout(new BorderLayout());
 
-        final LedGroupColorSwatch ledGroupSwitch = new LedGroupColorSwatch(3, 2);
+        final LedGroupColorSwatch ledGroupSwitch = new LedGroupColorSwatch();
 
         final JScrollPane scrollPane = new JScrollPane(ledGroupSwitch);
 

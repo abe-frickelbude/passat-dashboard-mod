@@ -11,6 +11,8 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 import de.fb.arduino_sandbox.view.component.*;
+import de.fb.arduino_sandbox.view.component.color.ColorSwatchInfoDialog;
+import de.fb.arduino_sandbox.view.component.color.JColorSwatch;
 
 public class ColorSwatchInfoDialogTest {
 

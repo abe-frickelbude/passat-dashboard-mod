@@ -6,6 +6,7 @@ import javax.swing.border.EmptyBorder;
 import org.slf4j.*;
 import com.bulenkov.darcula.DarculaLaf;
 import com.jgoodies.forms.layout.*;
+import de.fb.arduino_sandbox.view.component.color.JColorSwatch;
 
 public class JColorSwatchTest {
 
