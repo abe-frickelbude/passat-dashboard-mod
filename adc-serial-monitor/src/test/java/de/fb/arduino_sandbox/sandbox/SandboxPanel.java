@@ -5,10 +5,14 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.SystemColor;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import org.kordamp.ikonli.octicons.Octicons;
+import org.kordamp.ikonli.swing.FontIcon;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -42,8 +46,8 @@ public class SandboxPanel extends JPanel {
     private TinyButton tinyButton;
     private ColorSwatch colorSwatch_7;
     private ColorSwatch colorSwatch_8;
-    private TinyButton tinyButton_1;
-    private TinyButton tinyButton_2;
+    private TinyButton tinyButtonMinus;
+    private TinyButton tinyButtonPlus;
 
     /**
      * Create the panel.
@@ -173,10 +177,18 @@ public class SandboxPanel extends JPanel {
         spinner_5.setFont(new Font("Dialog", Font.PLAIN, 9));
         add(spinner_5, "14, 8");
 
-        button = new JButton("X");
+        button = new JButton("+");
+        button.setPreferredSize(new Dimension(28, 20));
+        button.setMaximumSize(new Dimension(18, 18));
+        button.setMinimumSize(new Dimension(18, 18));
+        button.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {}
+        });
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
         button.setFont(new Font("Dialog", Font.BOLD, 9));
-        add(button, "4, 10, center, fill");
+        add(button, "4, 10, left, fill");
 
         btnX = new JButton("X");
         btnX.setFont(new Font("Dialog", Font.BOLD, 9));
@@ -186,18 +198,35 @@ public class SandboxPanel extends JPanel {
         btnX_1.setFont(new Font("Dialog", Font.BOLD, 9));
         add(btnX_1, "8, 10, fill, default");
 
-        tinyButton_2 = new TinyButton();
-        tinyButton_2.setBackground(SystemColor.textInactiveText);
-        add(tinyButton_2, "10, 10, center, default");
+        tinyButtonPlus = new TinyButton();
+        tinyButtonPlus.setFontIcon(FontIcon.of(Octicons.PLUS));
+
+        // tinyButtonPlus.setSize(new Dimension(16, 16));
+        // tinyButtonPlus.setPreferredSize(new Dimension(18, 18));
+        // tinyButton_2.setForeground(UIManager.getColor("Button.darcula.selectedButtonForeground"));
+        // tinyButton_2.setFont(new Font("Consolas", Font.BOLD, 11));
+        tinyButtonPlus.setAlignmentX(Component.LEFT_ALIGNMENT);
+        // tinyButton_2.setBackground(SystemColor.textInactiveText);
+        add(tinyButtonPlus, "10, 10, center, center");
 
         tinyButton = new TinyButton();
-        tinyButton.setBackground(SystemColor.textInactiveText);
+        tinyButton.setFontIcon(FontIcon.of(Octicons.QUESTION));
+        // tinyButton.setPreferredSize(new Dimension(18, 18));
+        // tinyButton.setForeground(SystemColor.controlShadow);
+        // tinyButton.setFont(new Font("Consolas", Font.BOLD, 11));
+        // tinyButton.setLabel('-');
+        // tinyButton.setBackground(SystemColor.textInactiveText);
         add(tinyButton, "11, 10");
 
-        tinyButton_1 = new TinyButton();
-        tinyButton_1.setLabel('+');
-        tinyButton_1.setBackground(SystemColor.textInactiveText);
-        add(tinyButton_1, "12, 10, center, default");
+        tinyButtonMinus = new TinyButton();
+        tinyButtonMinus.setFontIcon(FontIcon.of(Octicons.PRIMITIVE_DOT));
+        // tinyButtonMinus.setSize(new Dimension(16, 16));
+        // tinyButtonMinus.setPreferredSize(new Dimension(18, 18));
+        // tinyButton_1.setForeground(SystemColor.controlShadow);
+        // tinyButton_1.setLabel('+');
+        // tinyButton_1.setFont(new Font("Consolas", Font.BOLD, 11));
+        // tinyButton_1.setBackground(SystemColor.textInactiveText);
+        add(tinyButtonMinus, "12, 10, center, center");
 
         btnX_4 = new JButton("X");
         btnX_4.setFont(new Font("Dialog", Font.BOLD, 9));

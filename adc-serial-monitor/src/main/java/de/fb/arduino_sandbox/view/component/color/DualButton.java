@@ -1,7 +1,11 @@
 package de.fb.arduino_sandbox.view.component.color;
 
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.SwingConstants;
 
 public class DualButton extends JComponent {
 
@@ -31,6 +35,25 @@ public class DualButton extends JComponent {
     }
 
     private void init() {
+
+        setLayout(new FlowLayout(FlowLayout.CENTER, 0, 2));
+
+        primaryButton.setHorizontalTextPosition(SwingConstants.LEFT);
+        primaryButton.setHorizontalAlignment(SwingConstants.LEFT);
+        primaryButton.setFont(new Font("Dialog", Font.BOLD, 12));
+        primaryButton.setText("+");
+        primaryButton.setMinimumSize(new Dimension(30, 20));
+        primaryButton.setMaximumSize(new Dimension(30, 20));
+        primaryButton.setPreferredSize(new Dimension(40, 24));
+
+        secondaryButton.setHorizontalTextPosition(SwingConstants.LEFT);
+        secondaryButton.setHorizontalAlignment(SwingConstants.LEFT);
+        secondaryButton.setFont(new Font("Dialog", Font.BOLD, 12));
+        secondaryButton.setText("-");
+        secondaryButton.setPreferredSize(new Dimension(40, 24));
+
+        this.add(primaryButton);
+        this.add(secondaryButton);
 
     }
 }
