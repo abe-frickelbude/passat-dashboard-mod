@@ -78,11 +78,45 @@ public class LedGroupColorSwatch extends JPanel {
         this.add(swatchGroup.getWhiteSwatch(), makeFillConstraints(columnIndex, 4));
         this.add(swatchGroup.getGroupSizeSpinner(), makeFillConstraints(columnIndex, 6));
 
+        this.add(swatchGroup.getPlusMinusButtons(), makeCenterConstraints(columnIndex, 8));
+
         // prevent removal if there's only one group
-        if (rgbwSwatchGroups.size() > 1) {
-            this.add(swatchGroup.getRemoveButton(), makeCenterConstraints(columnIndex, 8));
-            swatchGroup.registerRemoveCallback(this::removeSwatchGroup);
+        if (rgbwSwatchGroups.size() < 2) {
+            swatchGroup.getPlusMinusButtons().getButton(0).setEnabled(false);
         }
+
+        swatchGroup.registerRemoveCallback(this::removeSwatchGroup);
+        swatchGroup.registerAddCallback(this::addSwatchGroup);
+    }
+
+    private void addSwatchGroup(final RgbwSwatchGroup group) {
+
+        // +1 offset because the column indexing is 1-based
+        final int columnIndex = 2 * (rgbwSwatchGroups.indexOf(group) + 1);
+
+        log.info("Adding at column {}", columnIndex);
+
+        // WIP
+        // layout.insertColumn(columnIndex + 1, FormSpecs.RELATED_GAP_COLSPEC);
+        // layout.insertColumn(columnIndex + 2, ColumnSpec.decode("48px"));
+        //
+        // final RgbwSwatchGroup swatchGroup = RgbwSwatchGroup.create();
+        // rgbwSwatchGroups.add(swatchGroup);
+        //
+        // // calculate the column index based on the number of existing groups
+        // // note: stuff always added to EVEN columns and EVEN rows, as the ODD ones contain the gaps
+        // // row 2 - color swatch
+        // // row 4 - white swatch
+        // // row 6 - spinner
+        // // row 8 - remove button
+        //
+        // this.add(swatchGroup.getColorSwatch(), makeFillConstraints(columnIndex + 2, 2));
+        // this.add(swatchGroup.getWhiteSwatch(), makeFillConstraints(columnIndex + 2, 4));
+        // this.add(swatchGroup.getGroupSizeSpinner(), makeFillConstraints(columnIndex + 2, 6));
+        // this.add(swatchGroup.getPlusMinusButtons(), makeCenterConstraints(columnIndex + 2, 8));
+
+        this.revalidate();
+        this.repaint();
     }
 
     private void removeSwatchGroup(final RgbwSwatchGroup group) {
@@ -95,7 +129,7 @@ public class LedGroupColorSwatch extends JPanel {
         this.remove(group.getColorSwatch());
         this.remove(group.getWhiteSwatch());
         this.remove(group.getGroupSizeSpinner());
-        this.remove(group.getRemoveButton());
+        this.remove(group.getPlusMinusButtons());
 
         /*
          * Note: the FormLayout manager reflows the columns accordingly, i.e. indices are shifted etc,

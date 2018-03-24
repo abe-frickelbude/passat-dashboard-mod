@@ -13,6 +13,8 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import org.kordamp.ikonli.octicons.Octicons;
 import org.kordamp.ikonli.swing.FontIcon;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -20,8 +22,11 @@ import com.jgoodies.forms.layout.RowSpec;
 import de.fb.arduino_sandbox.view.component.color.BiColorSwatch;
 import de.fb.arduino_sandbox.view.component.color.ColorSwatch;
 import de.fb.arduino_sandbox.view.component.color.TinyButton;
+import de.fb.arduino_sandbox.view.component.color.TinyButtonGroup;
 
 public class SandboxPanel extends JPanel {
+
+    private static final Logger log = LoggerFactory.getLogger(SandboxPanel.class);
 
     private ColorSwatch colorSwatch;
     private JSpinner spinner;
@@ -33,7 +38,6 @@ public class SandboxPanel extends JPanel {
     private JButton btnX;
     private JButton btnX_1;
     private JButton btnX_4;
-    private JButton btnNewButton_1;
     private JButton button;
     private ColorSwatch colorSwatch_1;
     private ColorSwatch colorSwatch_2;
@@ -48,6 +52,7 @@ public class SandboxPanel extends JPanel {
     private ColorSwatch colorSwatch_8;
     private TinyButton tinyButtonMinus;
     private TinyButton tinyButtonPlus;
+    private TinyButtonGroup dualButton;
 
     /**
      * Create the panel.
@@ -200,6 +205,9 @@ public class SandboxPanel extends JPanel {
 
         tinyButtonPlus = new TinyButton();
         tinyButtonPlus.setFontIcon(FontIcon.of(Octicons.PLUS));
+        tinyButtonPlus.addActionCallback(() -> {
+            log.info("plus clicked!");
+        });
 
         // tinyButtonPlus.setSize(new Dimension(16, 16));
         // tinyButtonPlus.setPreferredSize(new Dimension(18, 18));
@@ -220,6 +228,11 @@ public class SandboxPanel extends JPanel {
 
         tinyButtonMinus = new TinyButton();
         tinyButtonMinus.setFontIcon(FontIcon.of(Octicons.PRIMITIVE_DOT));
+
+        tinyButtonMinus.addActionCallback(() -> {
+            log.info("minus clicked!");
+        });
+
         // tinyButtonMinus.setSize(new Dimension(16, 16));
         // tinyButtonMinus.setPreferredSize(new Dimension(18, 18));
         // tinyButton_1.setForeground(SystemColor.controlShadow);
@@ -232,10 +245,17 @@ public class SandboxPanel extends JPanel {
         btnX_4.setFont(new Font("Dialog", Font.BOLD, 9));
         add(btnX_4, "14, 10, fill, default");
 
-        btnNewButton_1 = new JButton("+");
-        btnNewButton_1.setFont(new Font("Dialog", Font.BOLD, 9));
-        btnNewButton_1.setIcon(null);
-        add(btnNewButton_1, "16, 10, fill, fill");
+        dualButton = new TinyButtonGroup();
+
+        dualButton.addButton(FontIcon.of(Octicons.PLUS), () -> {
+            log.info("plus clicked!");
+        });
+
+        dualButton.addButton(FontIcon.of(Octicons.DASH), () -> {
+            log.info("minus clicked!");
+        });
+
+        add(dualButton, "16, 10, center, default");
 
         biColorSwatch = new BiColorSwatch();
         biColorSwatch.setBorderWidth(4);

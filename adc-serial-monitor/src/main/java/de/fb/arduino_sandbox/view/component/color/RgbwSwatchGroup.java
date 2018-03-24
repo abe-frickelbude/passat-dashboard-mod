@@ -4,10 +4,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.util.function.Consumer;
-import javax.swing.JButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeListener;
+import org.kordamp.ikonli.octicons.Octicons;
+import org.kordamp.ikonli.swing.FontIcon;
 
 final class RgbwSwatchGroup {
 
@@ -17,15 +18,16 @@ final class RgbwSwatchGroup {
     private final ColorSwatch colorSwatch;
     private final ColorSwatch whiteSwatch;
     private final JSpinner groupSizeSpinner;
-    private final JButton removeButton;
+
+    private final TinyButtonGroup plusMinusButtons;
 
     private RgbwSwatchGroup(final ColorSwatch colorSwatch, final ColorSwatch whiteSwatch,
-        final JSpinner groupSizeSpinner, final JButton removeButton) {
+        final JSpinner groupSizeSpinner, final TinyButtonGroup plusMinusButtons) {
         super();
         this.colorSwatch = colorSwatch;
         this.whiteSwatch = whiteSwatch;
         this.groupSizeSpinner = groupSizeSpinner;
-        this.removeButton = removeButton;
+        this.plusMinusButtons = plusMinusButtons;
     }
 
     public static RgbwSwatchGroup create() {
@@ -50,10 +52,11 @@ final class RgbwSwatchGroup {
         groupSizeSpinner.setModel(model);
         groupSizeSpinner.setFont(FONT);
 
-        final JButton removeButton = new JButton("-");
-        removeButton.setFont(FONT);
+        final TinyButtonGroup plusMinusGroup = new TinyButtonGroup();
+        plusMinusGroup.addButton(FontIcon.of(Octicons.DASH));
+        plusMinusGroup.addButton(FontIcon.of(Octicons.PLUS));
 
-        return new RgbwSwatchGroup(colorSwatch, whiteSwatch, groupSizeSpinner, removeButton);
+        return new RgbwSwatchGroup(colorSwatch, whiteSwatch, groupSizeSpinner, plusMinusGroup);
     }
 
     public ColorSwatch getColorSwatch() {
@@ -68,8 +71,8 @@ final class RgbwSwatchGroup {
         return groupSizeSpinner;
     }
 
-    public JButton getRemoveButton() {
-        return removeButton;
+    public TinyButtonGroup getPlusMinusButtons() {
+        return plusMinusButtons;
     }
 
     public Color getColor() {
@@ -97,7 +100,13 @@ final class RgbwSwatchGroup {
     }
 
     public void registerRemoveCallback(final Consumer<RgbwSwatchGroup> callback) {
-        removeButton.addActionListener(event -> {
+        plusMinusButtons.getButton(0).addActionCallback(() -> {
+            callback.accept(this);
+        });
+    }
+
+    public void registerAddCallback(final Consumer<RgbwSwatchGroup> callback) {
+        plusMinusButtons.getButton(1).addActionCallback(() -> {
             callback.accept(this);
         });
     }

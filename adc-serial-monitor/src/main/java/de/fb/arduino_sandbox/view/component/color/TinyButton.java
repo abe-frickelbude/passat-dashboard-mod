@@ -1,27 +1,29 @@
 package de.fb.arduino_sandbox.view.component.color;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.UIManager;
+import org.apache.commons.lang3.StringUtils;
 import org.kordamp.ikonli.IkonHandler;
 import org.kordamp.ikonli.swing.FontIcon;
 import org.kordamp.ikonli.swing.IkonResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 
  *
  */
 public class TinyButton extends JComponent {
-
-    private static final Logger log = LoggerFactory.getLogger(TinyButton.class);
 
     private static final Dimension DEFAULT_SIZE = new Dimension(20, 20);
     private static final int BORDER_WIDTH = 1;
@@ -31,6 +33,7 @@ public class TinyButton extends JComponent {
     private static final Color DEFAULT_BORDER_COLOR = new Color(100, 100, 100);
     private static final Color DEFAULT_HOVER_BORDER_COLOR = new Color(150, 150, 150);
     private static final Color DEFAULT_CLICK_BORDER_COLOR = new Color(200, 200, 200);
+    private static final Color DEFAULT_INACTIVE_COLOR = new Color(100, 100, 100);
 
     // graphical state
     private Color topColor;
@@ -51,11 +54,17 @@ public class TinyButton extends JComponent {
     private boolean mouseInBounds;
     private boolean mousePressed;
 
+    private List<ActionListener> actionListeners;
+    private List<Runnable> actionCallbacks;
+
     public TinyButton() {
         super();
         buttonGeometry = new int[7];
         boundingRectangle = new Rectangle();
         iconSizeRatio = DEFAULT_ICON_SIZE_RATIO;
+
+        actionCallbacks = Collections.emptyList();
+        actionListeners = Collections.emptyList();
 
         initColors();
         setMinimumSize(DEFAULT_SIZE);
@@ -129,6 +138,20 @@ public class TinyButton extends JComponent {
         }
     }
 
+    public void addActionListener(final ActionListener listener) {
+        if (actionListeners.isEmpty()) {
+            actionListeners = new ArrayList<>();
+        }
+        actionListeners.add(listener);
+    }
+
+    public void addActionCallback(final Runnable callback) {
+        if (actionCallbacks.isEmpty()) {
+            actionCallbacks = new ArrayList<>();
+        }
+        actionCallbacks.add(callback);
+    }
+
     @Override
     public void revalidate() {
         super.revalidate();
@@ -136,7 +159,6 @@ public class TinyButton extends JComponent {
         preRenderIcon();
     }
 
-    // protected void paintComponent(final Graphics g) {
     @Override
     public void paint(final Graphics g) {
 
@@ -145,7 +167,17 @@ public class TinyButton extends JComponent {
 
         // draw border (it easier to simply fill a rectangle in the border color and then
         // fill a smaller inner rectangle with the foreground color)
-        ctx.setColor(mouseInBounds ? hoverBorderColor : borderColor);
+        if (mouseInBounds && isEnabled()) {
+            if (mousePressed) {
+                ctx.setColor(clickBorderColor);
+            } else {
+                ctx.setColor(hoverBorderColor);
+            }
+        } else {
+            ctx.setColor(borderColor);
+        }
+
+        // ctx.setColor(mouseInBounds ? hoverBorderColor : borderColor);
         ctx.fillRoundRect(0, 0, buttonGeometry[2], buttonGeometry[3], buttonGeometry[6], buttonGeometry[6]);
 
         // draw background
@@ -244,28 +276,47 @@ public class TinyButton extends JComponent {
         boundingRectangle.setBounds(0, 0, buttonGeometry[2], buttonGeometry[3]);
     }
 
+    private void fireActionEvent() {
+
+        final ActionEvent event = new ActionEvent(this, 0, StringUtils.EMPTY);
+        for (ActionListener listener : actionListeners) {
+            listener.actionPerformed(event);
+        }
+        for (Runnable callback : actionCallbacks) {
+            callback.run();
+        }
+    }
+
     @SuppressWarnings("synthetic-access")
     private void registerEvents() {
+
         this.addMouseListener(new MouseAdapter() {
 
             @Override
             public void mouseClicked(final MouseEvent event) {
-
+                if (isEnabled())
+                    fireActionEvent();
             }
 
             @Override
             public void mousePressed(final MouseEvent event) {
-
+                if (isEnabled() && boundingRectangle.contains(event.getPoint())) {
+                    mousePressed = true;
+                    repaint();
+                }
             }
 
             @Override
             public void mouseReleased(final MouseEvent event) {
-
+                if (isEnabled()) {
+                    mousePressed = false;
+                    repaint();
+                }
             }
 
             @Override
             public void mouseEntered(final MouseEvent event) {
-                if (boundingRectangle.contains(event.getPoint())) {
+                if (isEnabled() && boundingRectangle.contains(event.getPoint())) {
                     mouseInBounds = true;
                     repaint();
                 }
@@ -273,8 +324,10 @@ public class TinyButton extends JComponent {
 
             @Override
             public void mouseExited(final MouseEvent event) {
-                mouseInBounds = false;
-                repaint();
+                if (isEnabled()) {
+                    mouseInBounds = false;
+                    repaint();
+                }
             }
         });
     }
