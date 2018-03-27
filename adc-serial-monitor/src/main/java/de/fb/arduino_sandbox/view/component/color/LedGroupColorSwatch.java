@@ -7,7 +7,7 @@ import javax.swing.JPanel;
 
 public class LedGroupColorSwatch extends JPanel {
 
-    private final List<RgbwSwatchGroup2> rgbwSwatchGroups;
+    private final List<RgbwSwatchGroup> rgbwSwatchGroups;
 
     public LedGroupColorSwatch() {
         super();
@@ -23,16 +23,9 @@ public class LedGroupColorSwatch extends JPanel {
         }
     }
 
-    // sourceGroup is the event originator, i.e. the group to insert AFTER
-    private void addSwatchGroupAfter(final RgbwSwatchGroup2 sourceGroup) {
-
-        final int index = rgbwSwatchGroups.indexOf(sourceGroup);
-        addSwatchGroup(index + 1);
-    }
-
     private void addSwatchGroup(final int index) {
 
-        final RgbwSwatchGroup2 swatchGroup = RgbwSwatchGroup2.create();
+        final RgbwSwatchGroup swatchGroup = RgbwSwatchGroup.create();
 
         if (index >= rgbwSwatchGroups.size() - 1) {
             rgbwSwatchGroups.add(swatchGroup);  // append
@@ -41,7 +34,7 @@ public class LedGroupColorSwatch extends JPanel {
         }
 
         if (rgbwSwatchGroups.size() == 0) {
-            this.add(swatchGroup);   // if no groups exist yet, insert at index 0, of course :D
+            this.add(swatchGroup);   // if no groups exist yet, insert at index 0
         } else {
             this.add(swatchGroup, index);
         }
@@ -54,10 +47,15 @@ public class LedGroupColorSwatch extends JPanel {
         swatchGroup.registerAddCallback(this::addSwatchGroupAfter);
         swatchGroup.registerRemoveCallback(this::removeSwatchGroup);
         this.revalidate();
-        this.repaint();
     }
 
-    private void removeSwatchGroup(final RgbwSwatchGroup2 group) {
+    // sourceGroup is the event originator, i.e. the group to insert AFTER
+    private void addSwatchGroupAfter(final RgbwSwatchGroup sourceGroup) {
+        final int index = rgbwSwatchGroups.indexOf(sourceGroup);
+        addSwatchGroup(index + 1);
+    }
+
+    private void removeSwatchGroup(final RgbwSwatchGroup group) {
         rgbwSwatchGroups.remove(group);
         this.remove(group);
         this.revalidate();

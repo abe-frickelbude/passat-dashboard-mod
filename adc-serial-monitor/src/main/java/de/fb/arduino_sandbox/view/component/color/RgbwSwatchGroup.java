@@ -4,13 +4,18 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.util.function.Consumer;
+import javax.swing.JComponent;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeListener;
 import org.kordamp.ikonli.octicons.Octicons;
 import org.kordamp.ikonli.swing.FontIcon;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 
-final class RgbwSwatchGroup {
+final class RgbwSwatchGroup extends JComponent {
 
     private static final Font FONT = new Font("Dialog", Font.PLAIN, 9);
     private static final int SWATCH_SIZE = 32;
@@ -20,21 +25,14 @@ final class RgbwSwatchGroup {
     private final JSpinner groupSizeSpinner;
     private final TinyButtonGroup plusMinusButtons;
 
-    private RgbwSwatchGroup(final ColorSwatch colorSwatch, final ColorSwatch whiteSwatch,
-        final JSpinner groupSizeSpinner, final TinyButtonGroup plusMinusButtons) {
+    private RgbwSwatchGroup() {
+
         super();
-        this.colorSwatch = colorSwatch;
-        this.whiteSwatch = whiteSwatch;
-        this.groupSizeSpinner = groupSizeSpinner;
-        this.plusMinusButtons = plusMinusButtons;
-    }
 
-    public static RgbwSwatchGroup create() {
-
-        final ColorSwatch colorSwatch = new ColorSwatch();
+        colorSwatch = new ColorSwatch();
         colorSwatch.setBorderEnabled(true);
 
-        final ColorSwatch whiteSwatch = new ColorSwatch();
+        whiteSwatch = new ColorSwatch();
         whiteSwatch.setBorderEnabled(true);
 
         final Dimension swatchSize = new Dimension(SWATCH_SIZE, SWATCH_SIZE);
@@ -46,28 +44,52 @@ final class RgbwSwatchGroup {
         whiteSwatch.setMinimumSize(swatchSize);
         whiteSwatch.setMaximumSize(swatchSize);
 
-        final JSpinner groupSizeSpinner = new JSpinner();
+        groupSizeSpinner = new JSpinner();
         SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 999, 1);
         groupSizeSpinner.setModel(model);
         groupSizeSpinner.setFont(FONT);
 
-        final TinyButtonGroup plusMinusGroup = new TinyButtonGroup();
-        plusMinusGroup.addButton(FontIcon.of(Octicons.DASH));
-        plusMinusGroup.addButton(FontIcon.of(Octicons.PLUS));
+        plusMinusButtons = new TinyButtonGroup();
+        plusMinusButtons.addButton(FontIcon.of(Octicons.DASH));
+        plusMinusButtons.addButton(FontIcon.of(Octicons.PLUS));
 
-        return new RgbwSwatchGroup(colorSwatch, whiteSwatch, groupSizeSpinner, plusMinusGroup);
+        initLayout();
     }
 
-    public ColorSwatch getColorSwatch() {
-        return colorSwatch;
+    private void initLayout() {
+
+        final FormLayout layout = new FormLayout(
+            new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("48px")
+            },
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("48px"), // color swatch
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("48px"), // white swatch
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC, // count spinner
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC, // remove button
+                FormSpecs.RELATED_GAP_ROWSPEC
+            });
+
+        this.setLayout(layout);
+
+        // note: stuff always added to EVEN columns and EVEN rows, as the ODD ones contain the gaps
+        // row 2 - color swatch
+        // row 4 - white swatch
+        // row 6 - spinner
+        // row 8 - remove button
+        this.add(colorSwatch, "2,2,fill,fill");
+        this.add(whiteSwatch, "2,4,fill,fill");
+        this.add(groupSizeSpinner, "2,6,fill,fill");
+        this.add(plusMinusButtons, "2,8,center,center");
     }
 
-    public ColorSwatch getWhiteSwatch() {
-        return whiteSwatch;
-    }
-
-    public JSpinner getGroupSizeSpinner() {
-        return groupSizeSpinner;
+    public static RgbwSwatchGroup create() {
+        return new RgbwSwatchGroup();
     }
 
     public TinyButtonGroup getPlusMinusButtons() {
@@ -84,6 +106,14 @@ final class RgbwSwatchGroup {
 
     public int getGroupSize() {
         return Integer.class.cast(groupSizeSpinner.getValue());
+    }
+
+    public void setMinusEnabled(final boolean enabled) {
+        plusMinusButtons.getButton(0).setEnabled(enabled);
+    }
+
+    public void setPlusEnabled(final boolean enabled) {
+        plusMinusButtons.getButton(1).setEnabled(enabled);
     }
 
     public void addChangeListener(final ChangeListener listener) {
@@ -109,4 +139,5 @@ final class RgbwSwatchGroup {
             callback.accept(this);
         });
     }
+
 }

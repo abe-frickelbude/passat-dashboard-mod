@@ -17,6 +17,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -25,6 +27,8 @@ import org.apache.commons.collections4.CollectionUtils;
  *
  */
 public class ColorSwatch extends JComponent {
+
+    private static final Logger log = LoggerFactory.getLogger(ColorSwatch.class);
 
     private static final String TOOLTIP_TEMPLATE = "<html><h4>RGBA: ({0}, {1}, {2}, {3})<br/>HEX(ARGB): {4}</h4></html>";
 
@@ -68,6 +72,7 @@ public class ColorSwatch extends JComponent {
         setMaximumSize(DEFAULT_SWATCH_SIZE);
         setPreferredSize(DEFAULT_SWATCH_SIZE);
 
+        setDoubleBuffered(true);
         changeListeners = Collections.emptyList();
         swatchGeometry = new int[7];
         calculateSwatchGeometry();
@@ -157,25 +162,31 @@ public class ColorSwatch extends JComponent {
     @Override
     protected void paintComponent(final Graphics g) {
 
-        Graphics2D ctx = Graphics2D.class.cast(g);
-        ctx.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        super.paintComponent(g);
 
-        ctx.setBackground(getBackground());
-        ctx.clearRect(0, 0, swatchGeometry[2], swatchGeometry[3]);
+        // don't (re)draw until the component has been layouted
+        if (getWidth() != 0 && getHeight() != 0) {
 
-        if (borderEnabled) {
-            // draw border (it easier to simply fill a rectangle in the border color and then
-            // fill a smaller inner rectangle with the foreground color)
-            ctx.setColor(borderColor);
-            ctx.fillRoundRect(0, 0, swatchGeometry[2], swatchGeometry[3],
+            Graphics2D ctx = Graphics2D.class.cast(g);
+            ctx.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            ctx.setBackground(getBackground());
+            ctx.clearRect(0, 0, swatchGeometry[2], swatchGeometry[3]);
+
+            if (borderEnabled) {
+                // draw border (it easier to simply fill a rectangle in the border color and then
+                // fill a smaller inner rectangle with the foreground color)
+                ctx.setColor(borderColor);
+                ctx.fillRoundRect(0, 0, swatchGeometry[2], swatchGeometry[3],
+                    swatchGeometry[6], swatchGeometry[6]);
+            }
+
+            // draw swatch
+            ctx.setColor(color);
+            ctx.fillRoundRect(swatchGeometry[0], swatchGeometry[1],
+                swatchGeometry[4], swatchGeometry[5],
                 swatchGeometry[6], swatchGeometry[6]);
         }
-
-        // draw swatch
-        ctx.setColor(color);
-        ctx.fillRoundRect(swatchGeometry[0], swatchGeometry[1],
-            swatchGeometry[4], swatchGeometry[5],
-            swatchGeometry[6], swatchGeometry[6]);
     }
 
     private void calculateSwatchGeometry() {
@@ -240,6 +251,7 @@ public class ColorSwatch extends JComponent {
             public void componentResized(final ComponentEvent event) {
                 super.componentResized(event);
                 calculateSwatchGeometry();
+                repaint(); // important to account for changed swatch geometry!
             }
         });
     }
