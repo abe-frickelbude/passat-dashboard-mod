@@ -1,6 +1,7 @@
 package de.fb.arduino_sandbox.view.component;
 
 import java.awt.BorderLayout;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -9,11 +10,14 @@ import javax.swing.border.EmptyBorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.bulenkov.darcula.DarculaLaf;
-import de.fb.arduino_sandbox.view.component.color.LedGroupColorSwatch;
+import de.fb.arduino_sandbox.view.component.color.RgbwLedGroupController;
 
 public class LedGroupColorSwatchTest {
 
     private static final Logger log = LoggerFactory.getLogger(LedGroupColorSwatchTest.class);
+
+    private static JButton saveButton;
+    private static JButton loadButton;
 
     public static void main(final String[] args) {
 
@@ -30,14 +34,23 @@ public class LedGroupColorSwatchTest {
         mainWindow.setContentPane(contentPane);
         contentPane.setLayout(new BorderLayout());
 
-        final LedGroupColorSwatch ledGroupSwitch = new LedGroupColorSwatch();
+        final JPanel buttonPanel = new JPanel();
+        contentPane.add(buttonPanel, BorderLayout.SOUTH);
+
+        saveButton = new JButton("Save");
+        buttonPanel.add(saveButton);
+
+        loadButton = new JButton("Load");
+        buttonPanel.add(loadButton);
+
+        final RgbwLedGroupController ledGroupSwitch = new RgbwLedGroupController();
 
         final JScrollPane scrollPane = new JScrollPane(ledGroupSwitch);
 
         // contentPane.add(ledGroupSwitch, BorderLayout.CENTER);
         contentPane.add(scrollPane, BorderLayout.CENTER);
 
-        mainWindow.setBounds(100, 100, 1024, 768);
+        mainWindow.setBounds(100, 100, 1024, 299);
         mainWindow.setVisible(true);
     }
 }

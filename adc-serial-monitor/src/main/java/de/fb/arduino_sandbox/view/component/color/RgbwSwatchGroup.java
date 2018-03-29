@@ -3,6 +3,7 @@ package de.fb.arduino_sandbox.view.component.color;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.color.ColorSpace;
 import java.util.function.Consumer;
 import javax.swing.JComponent;
 import javax.swing.JSpinner;
@@ -18,7 +19,7 @@ import com.jgoodies.forms.layout.RowSpec;
 final class RgbwSwatchGroup extends JComponent {
 
     private static final Font FONT = new Font("Dialog", Font.PLAIN, 9);
-    private static final int SWATCH_SIZE = 32;
+    private static final Dimension SWATCH_SIZE = new Dimension(32, 32);
 
     private final ColorSwatch colorSwatch;
     private final ColorSwatch whiteSwatch;
@@ -26,23 +27,22 @@ final class RgbwSwatchGroup extends JComponent {
     private final TinyButtonGroup plusMinusButtons;
 
     private RgbwSwatchGroup() {
-
         super();
-
         colorSwatch = new ColorSwatch();
         colorSwatch.setBorderEnabled(true);
+        colorSwatch.setColor(Color.BLACK);
 
         whiteSwatch = new ColorSwatch();
         whiteSwatch.setBorderEnabled(true);
+        whiteSwatch.setColor(Color.BLACK);
 
-        final Dimension swatchSize = new Dimension(SWATCH_SIZE, SWATCH_SIZE);
-        colorSwatch.setPreferredSize(swatchSize);
-        colorSwatch.setMinimumSize(swatchSize);
-        colorSwatch.setMaximumSize(swatchSize);
+        colorSwatch.setPreferredSize(SWATCH_SIZE);
+        colorSwatch.setMinimumSize(SWATCH_SIZE);
+        colorSwatch.setMaximumSize(SWATCH_SIZE);
 
-        whiteSwatch.setPreferredSize(swatchSize);
-        whiteSwatch.setMinimumSize(swatchSize);
-        whiteSwatch.setMaximumSize(swatchSize);
+        whiteSwatch.setPreferredSize(SWATCH_SIZE);
+        whiteSwatch.setMinimumSize(SWATCH_SIZE);
+        whiteSwatch.setMaximumSize(SWATCH_SIZE);
 
         groupSizeSpinner = new JSpinner();
         SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 999, 1);
@@ -100,12 +100,30 @@ final class RgbwSwatchGroup extends JComponent {
         return colorSwatch.getColor();
     }
 
-    public Color getWhite() {
-        return whiteSwatch.getColor();
+    public void setColor(final Color color) {
+        colorSwatch.setColor(color);
+    }
+
+    public int getWhite() {
+        final Color color = whiteSwatch.getColor();
+        final float components[] = color.getColorComponents(ColorSpace.getInstance(ColorSpace.CS_GRAY), null);
+        final int luminance = Math.round(components[0] * 255.0f);
+        return luminance;
+    }
+
+    public void setWhite(final int whiteLevel) {
+        if (whiteLevel < 0 || whiteLevel > 255) {
+            throw new IllegalArgumentException("White level out of range! (0 - 255)");
+        }
+        whiteSwatch.setColor(new Color(whiteLevel, whiteLevel, whiteLevel));
     }
 
     public int getGroupSize() {
         return Integer.class.cast(groupSizeSpinner.getValue());
+    }
+
+    public void setGroupSize(final int groupSize) {
+        groupSizeSpinner.setValue(groupSize);
     }
 
     public void setMinusEnabled(final boolean enabled) {
@@ -139,5 +157,4 @@ final class RgbwSwatchGroup extends JComponent {
             callback.accept(this);
         });
     }
-
 }
