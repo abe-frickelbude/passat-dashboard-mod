@@ -5,7 +5,6 @@ import java.awt.FlowLayout;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JPanel;
-import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,13 +50,19 @@ public class RgbwLedGroupController extends JPanel {
 
     public void setColorGroups(final RgbwColorGroups colorGroups) {
 
-        for (Triple<Color, Integer, Integer> group : colorGroups.getGroups()) {
+        clearColorGroups();
+        for (RgbwColorGroup group : colorGroups.getGroups()) {
             RgbwSwatchGroup swatchGroup = RgbwSwatchGroup.create();
-            swatchGroup.setColor(group.getLeft());
-            swatchGroup.setWhite(group.getMiddle());
-            swatchGroup.setGroupSize(group.getRight());
+            swatchGroup.setColor(group.getColor());
+            swatchGroup.setWhite(group.getLuminance());
+            swatchGroup.setGroupSize(group.getGroupSize());
             appendSwatchGroup(swatchGroup);
         }
+    }
+
+    private void clearColorGroups() {
+        this.removeAll();
+        rgbwSwatchGroups.clear();
     }
 
     private void addSwatchGroup(final int index, final RgbwSwatchGroup swatchGroup) {
@@ -110,6 +115,5 @@ public class RgbwLedGroupController extends JPanel {
 
     private void fireChangeEvent() {
 
-        log.info("Colors changed: {}", getColorGroups());
     }
 }

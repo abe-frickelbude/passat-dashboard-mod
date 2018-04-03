@@ -3,7 +3,6 @@ package de.fb.arduino_sandbox.view.component.color;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.color.ColorSpace;
 import java.util.function.Consumer;
 import javax.swing.JComponent;
 import javax.swing.JSpinner;
@@ -106,9 +105,7 @@ final class RgbwSwatchGroup extends JComponent {
 
     public int getWhite() {
         final Color color = whiteSwatch.getColor();
-        final float components[] = color.getColorComponents(ColorSpace.getInstance(ColorSpace.CS_GRAY), null);
-        final int luminance = Math.round(components[0] * 255.0f);
-        return luminance;
+        return rgbToLuminance(color.getRed(), color.getGreen(), color.getBlue());
     }
 
     public void setWhite(final int whiteLevel) {
@@ -156,5 +153,11 @@ final class RgbwSwatchGroup extends JComponent {
         plusMinusButtons.getButton(1).addActionCallback(() -> {
             callback.accept(this);
         });
+    }
+
+    private int rgbToLuminance(final int r, final int g, final int b) {
+        return (r + g + b) / 3;
+        // use (max(R, G, B) + min(R, G, B)) / 2 to desaturate
+        // use (0.3 R + 0.59 G + 0.11 B)) to account for perceptual specifics
     }
 }
