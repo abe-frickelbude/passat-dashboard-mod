@@ -18,7 +18,6 @@ public class RgbwLedGroupController extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(RgbwLedGroupController.class);
 
     private final List<RgbwSwatchGroup> rgbwSwatchGroups;
-
     private List<Runnable> changeEventListeners;
 
     public RgbwLedGroupController() {

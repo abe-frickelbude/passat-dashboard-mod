@@ -21,6 +21,7 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import de.fb.arduino_sandbox.view.component.color.BiColorSwatch;
 import de.fb.arduino_sandbox.view.component.color.ColorSwatch;
+import de.fb.arduino_sandbox.view.component.color.Dial;
 import de.fb.arduino_sandbox.view.component.color.TinyButton;
 import de.fb.arduino_sandbox.view.component.color.TinyButtonGroup;
 
@@ -45,7 +46,6 @@ public class SandboxPanel extends JPanel {
     private ColorSwatch colorSwatch_4;
     private ColorSwatch colorSwatch_5;
     private ColorSwatch colorSwatch_6;
-    private BiColorSwatch biColorSwatch;
     private BiColorSwatch biColorSwatch_1;
     private TinyButton tinyButton;
     private ColorSwatch colorSwatch_7;
@@ -53,6 +53,10 @@ public class SandboxPanel extends JPanel {
     private TinyButton tinyButtonMinus;
     private TinyButton tinyButtonPlus;
     private TinyButtonGroup dualButton;
+    private Dial dial;
+    private Dial dial_1;
+    private Dial dial_2;
+    private Dial dial_3;
 
     /**
      * Create the panel.
@@ -90,7 +94,7 @@ public class SandboxPanel extends JPanel {
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
+                RowSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("100px"),
         }));
@@ -257,10 +261,20 @@ public class SandboxPanel extends JPanel {
 
         add(dualButton, "16, 10, center, default");
 
-        biColorSwatch = new BiColorSwatch();
-        biColorSwatch.setBorderWidth(4);
-        biColorSwatch.setBorderEnabled(true);
-        add(biColorSwatch, "16, 15, fill, fill");
+        dial = new Dial();
+        add(dial, "4, 13");
+
+        dial_1 = new Dial();
+        add(dial_1, "6, 13");
+
+        dial_2 = new Dial();
+        add(dial_2, "8, 13");
+
+        dial_3 = new Dial();
+        dial_3.setMinimumSize(new Dimension(40, 40));
+        dial_3.setMaximumSize(new Dimension(40, 40));
+        dial_3.setPreferredSize(new Dimension(48, 48));
+        add(dial_3, "16, 15");
 
     }
 
