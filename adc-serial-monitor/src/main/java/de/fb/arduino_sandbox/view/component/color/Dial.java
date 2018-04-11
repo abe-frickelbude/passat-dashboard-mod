@@ -1,40 +1,60 @@
 package de.fb.arduino_sandbox.view.component.color;
 
 import java.awt.*;
+import java.awt.MultipleGradientPaint.CycleMethod;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
 import javax.swing.JComponent;
 import javax.swing.UIManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Dial extends JComponent {
 
+    private static final Logger log = LoggerFactory.getLogger(Dial.class);
+
     private static final Dimension DEFAULT_SIZE = new Dimension(32, 32);
 
-    private static final float ARC_WIDTH = 3.0f;
+    private static final float ARC_STROKE_WIDTH = 3.0f;
+    private static final float FOCUS_RING_STROKE_WIDTH = 1.5f;
+
+    private static final float MIN_KNOB_DOT_RADIUS = 2.0f;
 
     private static final float ARC_RADIUS_RATIO = 0.80f;
     private static final float KNOB_RADIUS_RATIO = 0.65f;
-    private static final float FOCUS_RING_RADIUS_RATIO = 0.99f;
+    private static final float KNOB_DOT_RADIUS_RATIO = 0.15f;
+    private static final float FOCUS_RING_RADIUS_RATIO = 0.9995f;
 
     private static final Color DEFAULT_ARC_COLOR = new Color(0, 204, 255);
+    private static final Color DEFAULT_KNOB_COLOR = new Color(180, 180, 180);
     private static final Color DEFAULT_FOCUS_RING_COLOR = new Color(200, 200, 200);
 
     // graphical state
-    private Color arcColor;
+    private Color indicatorArcColor;
+    private Color innerKnobColor;
+    private Color outerKnobColor;
     private Color focusRingColor;
 
-    private float arcRadius;
-    private float knobRadius;
-    private float focusRingRadius;
+    private RadialGradientPaint knobGradient;
+    private BasicStroke focusRingStroke;
+    private BasicStroke indicatorArcStroke;
 
-    private Arc2D indicatorArc;
+    // private float arcRadius;
+    // private float knobRadius;
+    // private float focusRingRadius;
+
     private Ellipse2D knob;
+    private Shape knobDot;
+    private Arc2D indicatorArc;
     private Ellipse2D focusRing;
 
+    // private Point2D.Float center;
+    private AffineTransform viewportTransform;
     private Rectangle boundingRectangle;
 
     private boolean mouseInBounds;
@@ -82,57 +102,53 @@ public class Dial extends JComponent {
 
         Graphics2D ctx = Graphics2D.class.cast(g);
         ctx.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        ctx.transform(viewportTransform);
 
-        if (mouseInBounds && isEnabled()) {
-            if (mousePressed) {
-                // ctx.setColor(clickBorderColor);
-            } else {
-                // ctx.setStroke(new BasicStroke(0.25f));
-                ctx.setColor(focusRingColor);
-                ctx.draw(focusRing);
-            }
-        } else {
-            // ctx.setColor(borderColor);
-        }
-
-        // ctx.setStroke(new BasicStroke(1.0f));
-
+        ctx.setColor(innerKnobColor);
         ctx.fill(knob);
 
-        // ctx.setColor(mouseInBounds ? hoverBorderColor : borderColor);
-        // ctx.fillRoundRect(0, 0, buttonGeometry[2], buttonGeometry[3], buttonGeometry[6], buttonGeometry[6]);
-        //
-        // // draw background
+        ctx.setColor(indicatorArcColor);
+        ctx.fill(knobDot);
+
         // final Paint prevPaint = ctx.getPaint();
-        // ctx.setPaint(new GradientPaint(0, 0, topColor, 0, getHeight(), bottomColor));
-        // ctx.fillRoundRect(buttonGeometry[0], buttonGeometry[1],
-        // buttonGeometry[4], buttonGeometry[5],
-        // buttonGeometry[6], buttonGeometry[6]);
+        // ctx.setPaint(knobGradient);
+        // ctx.fill(knob);
         // ctx.setPaint(prevPaint);
-        //
-        // // draw icon
-        // if (icon != null) {
-        // ctx.translate(iconPosition.getX(), iconPosition.getY());
-        // ctx.drawImage(iconImage, 0, 0, null);
-        // }
+
+        if (mouseInBounds && isEnabled()) {
+            // if (mousePressed) {
+            // } else {
+            // }
+            ctx.setColor(focusRingColor);
+            final Stroke stroke = ctx.getStroke();
+            ctx.setStroke(focusRingStroke);
+            ctx.draw(focusRing);
+            ctx.setStroke(stroke);
+        }
+
+        ////// Debug bbox ///////////
+
+        // ctx.setColor(Color.RED);
+        // Rectangle2D bbox = new Rectangle2D.Float(
+        // -getPreferredSize().width / 2,
+        // -getPreferredSize().height / 2 + 1,
+        // getPreferredSize().width, getPreferredSize().height - 1);
+        // ctx.draw(bbox);
+
+        /////////////////////////////
+
     }
 
     private void initColors() {
 
-        Color color = UIManager.getColor("Button.darcula.selectedButtonForeground");
-        setForeground(color != null ? color : Color.WHITE);
-
-        color = UIManager.getColor("Button.darcula.color1");
-        // setTopColor(color != null ? color : Color.GRAY);
+        Color color = UIManager.getColor("Button.darcula.color1");
+        this.innerKnobColor = color != null ? color : DEFAULT_KNOB_COLOR;
 
         color = UIManager.getColor("Button.darcula.color2");
-        // setBottomColor(color != null ? color : Color.GRAY);
+        this.outerKnobColor = color != null ? color : DEFAULT_KNOB_COLOR;
 
-        this.arcColor = DEFAULT_ARC_COLOR;
+        this.indicatorArcColor = DEFAULT_ARC_COLOR;
         this.focusRingColor = DEFAULT_FOCUS_RING_COLOR;
-        // this.borderColor = DEFAULT_ARC_COLOR;
-        // this.hoverBorderColor = DEFAULT_HOVER_BORDER_COLOR;
-        // this.clickBorderColor = DEFAULT_CLICK_BORDER_COLOR;
     }
 
     private void preRenderIcon() {
@@ -191,24 +207,45 @@ public class Dial extends JComponent {
         float halfWidth = 0.5f * width;
         float halfHeight = 0.5f * height;
         float radius = halfWidth < halfHeight ? halfWidth : halfHeight;
+        // center = new Point2D.Float(halfWidth, halfHeight);
 
+        // "global transform" that establishes a canonical Cartesian coordinate system with the center
+        // @(half_width, half_height) with positive Y-axis pointing up
+        viewportTransform = new AffineTransform(1.0f, 0.0f, 0.0f, -1.0f, halfWidth, halfHeight);
         boundingRectangle = new Rectangle(0, 0, width, height);
 
-        focusRingRadius = radius * FOCUS_RING_RADIUS_RATIO;
-        knobRadius = radius * KNOB_RADIUS_RATIO;
-        arcRadius = radius * ARC_RADIUS_RATIO;
+        final float focusRingRadius = radius * FOCUS_RING_RADIUS_RATIO;
+        final float knobRadius = radius * KNOB_RADIUS_RATIO;
+        final float arcRadius = radius * ARC_RADIUS_RATIO;
 
-        knob = new Ellipse2D.Float(
-            halfWidth - knobRadius, halfHeight - knobRadius,
-            2.0f * knobRadius, 2.0f * knobRadius);
+        knob = new Ellipse2D.Float(-knobRadius, -knobRadius, 2.0f * knobRadius, 2.0f * knobRadius);
 
-        focusRing = new Ellipse2D.Float(
-            halfWidth - focusRingRadius, halfHeight - focusRingRadius,
-            2.0f * focusRingRadius, 2.0f * focusRingRadius);
+        float knobDotRadius = radius * KNOB_DOT_RADIUS_RATIO;
+        if (knobDotRadius < MIN_KNOB_DOT_RADIUS) {
+            knobDotRadius = MIN_KNOB_DOT_RADIUS;
+        }
+
+        // pre-transform the knob dot shape
+        final Ellipse2D dot = new Ellipse2D.Float(-knobDotRadius, -knobDotRadius, 2.0f * knobDotRadius, 2.0f * knobDotRadius);
+
+        AffineTransform xform = new AffineTransform();
+        xform.rotate(Math.PI / 4.0);
+        xform.translate(-knobRadius + 2 + dot.getWidth() / 2, 0.0);
+        knobDot = xform.createTransformedShape(dot);
+
+        //@formatter:off
+        knobGradient = new RadialGradientPaint(halfWidth, halfHeight, knobRadius,
+            halfWidth  + 2, halfWidth + 2,
+            new float[] { 0.0f, 1.0f }, 
+            new Color[] { outerKnobColor, innerKnobColor },
+            CycleMethod.NO_CYCLE);
+        //@formatter:on
+
+        focusRing = new Ellipse2D.Float(-focusRingRadius, -focusRingRadius, 2.0f * focusRingRadius, 2.0f * focusRingRadius);
+        focusRingStroke = new BasicStroke(FOCUS_RING_STROKE_WIDTH);
     }
 
     private void fireActionEvent() {
-
         // final ActionEvent event = new ActionEvent(this, 0, StringUtils.EMPTY);
         // for (ActionListener listener : actionListeners) {
         // listener.actionPerformed(event);
@@ -257,7 +294,7 @@ public class Dial extends JComponent {
 
             @Override
             public void mouseEntered(final MouseEvent event) {
-                if (isEnabled() && boundingRectangle.contains(event.getPoint())) {
+                if (isEnabled()) {
                     mouseInBounds = true;
                     repaint();
                 }

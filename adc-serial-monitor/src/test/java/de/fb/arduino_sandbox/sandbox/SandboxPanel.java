@@ -271,8 +271,8 @@ public class SandboxPanel extends JPanel {
         add(dial_2, "8, 13");
 
         dial_3 = new Dial();
-        dial_3.setMinimumSize(new Dimension(40, 40));
-        dial_3.setMaximumSize(new Dimension(40, 40));
+        dial_3.setMinimumSize(new Dimension(48, 48));
+        dial_3.setMaximumSize(new Dimension(48, 48));
         dial_3.setPreferredSize(new Dimension(48, 48));
         add(dial_3, "16, 15");
 
