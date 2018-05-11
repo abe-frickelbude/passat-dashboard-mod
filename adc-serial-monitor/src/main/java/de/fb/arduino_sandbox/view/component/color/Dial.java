@@ -110,6 +110,13 @@ public class Dial extends JComponent {
         ctx.setColor(indicatorArcColor);
         ctx.fill(knobDot);
 
+        ctx.setColor(indicatorArcColor);
+
+        Stroke stroke = ctx.getStroke();
+        ctx.setStroke(indicatorArcStroke);
+        ctx.draw(indicatorArc);
+        ctx.setStroke(stroke);
+
         // final Paint prevPaint = ctx.getPaint();
         // ctx.setPaint(knobGradient);
         // ctx.fill(knob);
@@ -120,7 +127,7 @@ public class Dial extends JComponent {
             // } else {
             // }
             ctx.setColor(focusRingColor);
-            final Stroke stroke = ctx.getStroke();
+            stroke = ctx.getStroke();
             ctx.setStroke(focusRingStroke);
             ctx.draw(focusRing);
             ctx.setStroke(stroke);
@@ -240,6 +247,17 @@ public class Dial extends JComponent {
             new Color[] { outerKnobColor, innerKnobColor },
             CycleMethod.NO_CYCLE);
         //@formatter:on
+
+        indicatorArcStroke = new BasicStroke(ARC_STROKE_WIDTH);
+
+        indicatorArc = new Arc2D.Float(Arc2D.OPEN);
+        indicatorArc.setFrame(-arcRadius, -arcRadius, 2.0f * arcRadius, 2.0f * arcRadius);
+
+        //////////////////////////////////////
+        indicatorArc.setAngleStart(-225.0);
+        indicatorArc.setAngleExtent(1.0);
+
+        //////////////////////////////////////
 
         focusRing = new Ellipse2D.Float(-focusRingRadius, -focusRingRadius, 2.0f * focusRingRadius, 2.0f * focusRingRadius);
         focusRingStroke = new BasicStroke(FOCUS_RING_STROKE_WIDTH);

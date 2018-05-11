@@ -17,8 +17,8 @@ public class SandboxPanelTestApp {
     public static void main(final String[] args) {
 
         try {
-            // UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             UIManager.setLookAndFeel(new DarculaLaf());
+
         } catch (Exception ex) {}
 
         final JFrame mainWindow = new JFrame();
