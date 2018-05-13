@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import javax.swing.JPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +19,12 @@ public class RgbwLedGroupController extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(RgbwLedGroupController.class);
 
     private final List<RgbwSwatchGroup> rgbwSwatchGroups;
-    private List<Runnable> changeEventListeners;
+    private final List<Consumer<RgbwColorGroups>> changeCallbacks;
 
     public RgbwLedGroupController() {
         super();
         this.rgbwSwatchGroups = new ArrayList<>();
+        this.changeCallbacks = new ArrayList<>();
         this.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         initUI();
     }
@@ -59,6 +61,10 @@ public class RgbwLedGroupController extends JPanel {
         }
     }
 
+    public void addChangeCallback(final Consumer<RgbwColorGroups> callback) {
+        changeCallbacks.add(callback);
+    }
+
     private void clearColorGroups() {
         this.removeAll();
         rgbwSwatchGroups.clear();
@@ -85,10 +91,7 @@ public class RgbwLedGroupController extends JPanel {
 
         swatchGroup.registerAddCallback(this::addSwatchGroupAfter);
         swatchGroup.registerRemoveCallback(this::removeSwatchGroup);
-
-        swatchGroup.addChangeListener(event -> {
-            this.fireChangeEvent();
-        });
+        swatchGroup.addChangeCallback(event -> fireChangeEvent());
 
         this.revalidate();
         this.fireChangeEvent();
@@ -113,6 +116,9 @@ public class RgbwLedGroupController extends JPanel {
     }
 
     private void fireChangeEvent() {
-
+        final RgbwColorGroups colorGroups = getColorGroups();
+        for (final Consumer<RgbwColorGroups> callback : changeCallbacks) {
+            callback.accept(colorGroups);
+        }
     }
 }

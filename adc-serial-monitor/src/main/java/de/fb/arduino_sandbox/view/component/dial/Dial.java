@@ -24,7 +24,6 @@ public class Dial extends JComponent {
 
     private static final String TOOLTIP_TEMPLATE = "<html><h4>Value: {0}<br/>Min: {1}<br/>Max: {2}</h4></html>";
 
-    // private static final Logger log = LoggerFactory.getLogger(Dial.class);
     private static final Dimension DEFAULT_SIZE = new Dimension(32, 32);
 
     private static final float ARC_STROKE_WIDTH = 3.0f;

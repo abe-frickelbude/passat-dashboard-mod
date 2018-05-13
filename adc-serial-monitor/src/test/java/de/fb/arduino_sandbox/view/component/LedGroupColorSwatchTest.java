@@ -57,9 +57,8 @@ public class LedGroupColorSwatchTest {
         loadButton = new JButton("Load");
         buttonPanel.add(loadButton);
 
-        connectEvents();
-
         ledGroupSwitch = new RgbwLedGroupController();
+        connectEvents();
 
         final JScrollPane scrollPane = new JScrollPane(ledGroupSwitch);
 
@@ -78,6 +77,10 @@ public class LedGroupColorSwatchTest {
 
         loadButton.addActionListener(event -> {
             loadConfiguration();
+        });
+
+        ledGroupSwitch.addChangeCallback(event -> {
+            log.info(event.toString());
         });
     }
 

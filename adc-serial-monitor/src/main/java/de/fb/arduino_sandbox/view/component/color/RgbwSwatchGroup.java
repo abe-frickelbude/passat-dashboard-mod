@@ -3,11 +3,14 @@ package de.fb.arduino_sandbox.view.component.color;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.JComponent;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeListener;
+import org.apache.commons.collections4.CollectionUtils;
 import org.kordamp.ikonli.octicons.Octicons;
 import org.kordamp.ikonli.swing.FontIcon;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -28,8 +31,13 @@ final class RgbwSwatchGroup extends JComponent {
     private final JSpinner groupSizeSpinner;
     private final TinyButtonGroup plusMinusButtons;
 
+    private List<Consumer<RgbwColorGroup>> changeCallbacks;
+
     private RgbwSwatchGroup() {
+
         super();
+        changeCallbacks = Collections.emptyList();
+
         colorSwatch = new ColorSwatch();
         colorSwatch.setBorderEnabled(true);
         colorSwatch.setColor(Color.BLACK);
@@ -58,6 +66,7 @@ final class RgbwSwatchGroup extends JComponent {
         plusMinusButtons.addButton(FontIcon.of(Octicons.PLUS));
 
         initLayout();
+        registerEvents();
     }
 
     private void initLayout() {
@@ -110,7 +119,6 @@ final class RgbwSwatchGroup extends JComponent {
 
     public int getWhite() {
         return luminanceDial.getValue();
-
     }
 
     public void setWhite(final int whiteLevel) {
@@ -136,16 +144,11 @@ final class RgbwSwatchGroup extends JComponent {
         plusMinusButtons.getButton(1).setEnabled(enabled);
     }
 
-    public void addChangeListener(final ChangeListener listener) {
-        colorSwatch.addChangeListener(listener);
-        luminanceDial.addChangeListener(listener);
-        groupSizeSpinner.addChangeListener(listener);
-    }
-
-    public void removeChangeListener(final ChangeListener listener) {
-        colorSwatch.addChangeListener(listener);
-        luminanceDial.addChangeListener(listener);
-        groupSizeSpinner.addChangeListener(listener);
+    public void addChangeCallback(final Consumer<RgbwColorGroup> callback) {
+        if (CollectionUtils.isEmpty(changeCallbacks)) {
+            changeCallbacks = new ArrayList<>();
+        }
+        changeCallbacks.add(callback);
     }
 
     public void registerRemoveCallback(final Consumer<RgbwSwatchGroup> callback) {
@@ -158,5 +161,18 @@ final class RgbwSwatchGroup extends JComponent {
         plusMinusButtons.getButton(1).addActionCallback(() -> {
             callback.accept(this);
         });
+    }
+
+    private void registerEvents() {
+        colorSwatch.addChangeListener(event -> fireChangeEvent());
+        luminanceDial.addChangeListener(event -> fireChangeEvent());
+        groupSizeSpinner.addChangeListener(event -> fireChangeEvent());
+    }
+
+    private void fireChangeEvent() {
+        final RgbwColorGroup colorGroup = new RgbwColorGroup(getColor(), getWhite(), getGroupSize());
+        for (final Consumer<RgbwColorGroup> callback : changeCallbacks) {
+            callback.accept(colorGroup);
+        }
     }
 }

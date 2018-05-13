@@ -20,4 +20,20 @@ public class RgbwColorGroups {
     public List<RgbwColorGroup> getGroups() {
         return colorGroups;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("RgbwColorGroups [");
+        if (colorGroups != null) {
+            builder.append("\n");
+            for (RgbwColorGroup group : colorGroups) {
+                builder.append("\t");
+                builder.append(group.toString());
+                builder.append("\n");
+            }
+        }
+        builder.append("]");
+        return builder.toString();
+    }
 }

@@ -41,4 +41,21 @@ public class RgbwColorGroup {
     public void setGroupSize(final int groupSize) {
         this.groupSize = groupSize;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("RgbwColorGroup [");
+        if (color != null) {
+            builder.append("color=");
+            builder.append(color);
+            builder.append(", ");
+        }
+        builder.append("luminance=");
+        builder.append(luminance);
+        builder.append(", groupSize=");
+        builder.append(groupSize);
+        builder.append("]");
+        return builder.toString();
+    }
 }
