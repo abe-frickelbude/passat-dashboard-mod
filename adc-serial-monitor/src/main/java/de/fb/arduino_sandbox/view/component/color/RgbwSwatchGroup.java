@@ -15,14 +15,16 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import de.fb.arduino_sandbox.view.component.color_swatch.ColorSwatch;
+import de.fb.arduino_sandbox.view.component.dial.Dial;
 
 final class RgbwSwatchGroup extends JComponent {
 
     private static final Font FONT = new Font("Dialog", Font.PLAIN, 9);
     private static final Dimension SWATCH_SIZE = new Dimension(32, 32);
+    private static final Dimension DIAL_SIZE = new Dimension(40, 40);
 
     private final ColorSwatch colorSwatch;
-    private final ColorSwatch whiteSwatch;
+    private final Dial luminanceDial;
     private final JSpinner groupSizeSpinner;
     private final TinyButtonGroup plusMinusButtons;
 
@@ -32,17 +34,19 @@ final class RgbwSwatchGroup extends JComponent {
         colorSwatch.setBorderEnabled(true);
         colorSwatch.setColor(Color.BLACK);
 
-        whiteSwatch = new ColorSwatch();
-        whiteSwatch.setBorderEnabled(true);
-        whiteSwatch.setColor(Color.BLACK);
-
         colorSwatch.setPreferredSize(SWATCH_SIZE);
         colorSwatch.setMinimumSize(SWATCH_SIZE);
         colorSwatch.setMaximumSize(SWATCH_SIZE);
 
-        whiteSwatch.setPreferredSize(SWATCH_SIZE);
-        whiteSwatch.setMinimumSize(SWATCH_SIZE);
-        whiteSwatch.setMaximumSize(SWATCH_SIZE);
+        luminanceDial = new Dial();
+        luminanceDial.setMin(0);
+        luminanceDial.setMax(255);
+        luminanceDial.setCoarseStep(20);
+        luminanceDial.setFineStep(1);
+
+        luminanceDial.setPreferredSize(DIAL_SIZE);
+        luminanceDial.setMinimumSize(DIAL_SIZE);
+        luminanceDial.setMaximumSize(DIAL_SIZE);
 
         groupSizeSpinner = new JSpinner();
         SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 999, 1);
@@ -83,7 +87,7 @@ final class RgbwSwatchGroup extends JComponent {
         // row 6 - spinner
         // row 8 - remove button
         this.add(colorSwatch, "2,2,fill,fill");
-        this.add(whiteSwatch, "2,4,fill,fill");
+        this.add(luminanceDial, "2,4,center,fill");
         this.add(groupSizeSpinner, "2,6,fill,fill");
         this.add(plusMinusButtons, "2,8,center,center");
     }
@@ -105,15 +109,15 @@ final class RgbwSwatchGroup extends JComponent {
     }
 
     public int getWhite() {
-        final Color color = whiteSwatch.getColor();
-        return rgbToLuminance(color.getRed(), color.getGreen(), color.getBlue());
+        return luminanceDial.getValue();
+
     }
 
     public void setWhite(final int whiteLevel) {
         if (whiteLevel < 0 || whiteLevel > 255) {
             throw new IllegalArgumentException("White level out of range! (0 - 255)");
         }
-        whiteSwatch.setColor(new Color(whiteLevel, whiteLevel, whiteLevel));
+        luminanceDial.setValue(whiteLevel);
     }
 
     public int getGroupSize() {
@@ -134,13 +138,13 @@ final class RgbwSwatchGroup extends JComponent {
 
     public void addChangeListener(final ChangeListener listener) {
         colorSwatch.addChangeListener(listener);
-        whiteSwatch.addChangeListener(listener);
+        luminanceDial.addChangeListener(listener);
         groupSizeSpinner.addChangeListener(listener);
     }
 
     public void removeChangeListener(final ChangeListener listener) {
         colorSwatch.addChangeListener(listener);
-        whiteSwatch.addChangeListener(listener);
+        luminanceDial.addChangeListener(listener);
         groupSizeSpinner.addChangeListener(listener);
     }
 
@@ -154,11 +158,5 @@ final class RgbwSwatchGroup extends JComponent {
         plusMinusButtons.getButton(1).addActionCallback(() -> {
             callback.accept(this);
         });
-    }
-
-    private int rgbToLuminance(final int r, final int g, final int b) {
-        return (r + g + b) / 3;
-        // use (max(R, G, B) + min(R, G, B)) / 2 to desaturate
-        // use (0.3 R + 0.59 G + 0.11 B)) to account for perceptual specifics
     }
 }

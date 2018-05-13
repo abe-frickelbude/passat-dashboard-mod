@@ -8,6 +8,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,6 +21,8 @@ import de.fb.arduino_sandbox.view.component.MouseEventHook;
 import de.fb.arduino_sandbox.view.component.MouseMotionEventHook;
 
 public class Dial extends JComponent {
+
+    private static final String TOOLTIP_TEMPLATE = "<html><h4>Value: {0}<br/>Min: {1}<br/>Max: {2}</h4></html>";
 
     // private static final Logger log = LoggerFactory.getLogger(Dial.class);
     private static final Dimension DEFAULT_SIZE = new Dimension(32, 32);
@@ -81,6 +84,7 @@ public class Dial extends JComponent {
 
         initGeometry();
         registerEvents();
+        updateState();
     }
 
     public int getMin() {
@@ -89,6 +93,7 @@ public class Dial extends JComponent {
 
     public void setMin(final int min) {
         model.setMin(min);
+        updateState();
     }
 
     public int getMax() {
@@ -97,6 +102,7 @@ public class Dial extends JComponent {
 
     public void setMax(final int max) {
         model.setMax(max);
+        updateState();
     }
 
     public int getValue() {
@@ -105,6 +111,7 @@ public class Dial extends JComponent {
 
     public void setValue(final int value) {
         model.setValue(value);
+        updateState();
     }
 
     public int getCoarseStep() {
@@ -113,6 +120,7 @@ public class Dial extends JComponent {
 
     public void setCoarseStep(final int coarseStep) {
         model.setCoarseStep(coarseStep);
+        updateState();
     }
 
     public int getFineStep() {
@@ -120,7 +128,8 @@ public class Dial extends JComponent {
     }
 
     public void setFineStep(final int fineStep) {
-        model.setCoarseStep(fineStep);
+        model.setFineStep(fineStep);
+        updateState();
     }
 
     public void addChangeListener(final ChangeListener listener) {
@@ -141,6 +150,7 @@ public class Dial extends JComponent {
     public void revalidate() {
         super.revalidate();
         initGeometry();
+        updateState();
     }
 
     @Override
@@ -229,6 +239,12 @@ public class Dial extends JComponent {
         focusRingStroke = new BasicStroke(FOCUS_RING_STROKE_WIDTH);
     }
 
+    private void updateState() {
+        updateAngles();
+        setTooltip();
+        repaint();
+    }
+
     private void updateAngles() {
 
         final float normValue = 1.0f * (model.getValue() - model.getMin()) / (model.getMax() - model.getMin());
@@ -236,6 +252,11 @@ public class Dial extends JComponent {
 
         indicatorArc.setAngleExtent(angle);
         knobRotationAngle = -Math.toRadians(angle);
+    }
+
+    private void setTooltip() {
+        final String text = MessageFormat.format(TOOLTIP_TEMPLATE, model.getValue(), model.getMin(), model.getMax());
+        setToolTipText(text);
     }
 
     private void fireChangeEvent() {
@@ -316,8 +337,7 @@ public class Dial extends JComponent {
             }
 
             fireChangeEvent();
-            updateAngles();
-            repaint();
+            updateState();
         }
     }
 
@@ -331,8 +351,7 @@ public class Dial extends JComponent {
             }
 
             fireChangeEvent();
-            updateAngles();
-            repaint();
+            updateState();
         }
     }
 
@@ -345,7 +364,7 @@ public class Dial extends JComponent {
             public void componentResized(final ComponentEvent event) {
                 super.componentResized(event);
                 initGeometry();
-                repaint(); // important to account for changed swatch geometry!
+                updateState(); // necessary to account for changed geometry!
             }
         });
 

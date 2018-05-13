@@ -272,7 +272,7 @@ public class SandboxPanel extends JPanel {
         add(dial_2, "8, 13");
 
         dial_3 = new Dial();
-        dial_3.setValue(0);
+        dial_3.setValue(37);
         dial_3.setFineStep(1);
         dial_3.setCoarseStep(25);
         dial_3.setMax(255);
