@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.JPanel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -16,7 +14,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RgbwLedGroupController extends JPanel {
 
-    private static final Logger log = LoggerFactory.getLogger(RgbwLedGroupController.class);
+    // private static final Logger log = LoggerFactory.getLogger(RgbwLedGroupController.class);
 
     private final List<RgbwSwatchGroup> rgbwSwatchGroups;
     private final List<Consumer<RgbwColorGroups>> changeCallbacks;
@@ -25,18 +23,14 @@ public class RgbwLedGroupController extends JPanel {
         super();
         this.rgbwSwatchGroups = new ArrayList<>();
         this.changeCallbacks = new ArrayList<>();
-        this.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        this.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
         initUI();
     }
 
     private void initUI() {
-
-        // test
+        // initial setup
         RgbwColorGroups groups = new RgbwColorGroups();
-        groups.addGroup(Color.RED, 100, 3);
-        groups.addGroup(Color.CYAN, 255, 7);
-        groups.addGroup(Color.YELLOW, 25, 2);
-        groups.addGroup(Color.GREEN, 0, 6);
+        groups.addGroup(Color.BLACK, 0, 1);
         setColorGroups(groups);
     }
 
