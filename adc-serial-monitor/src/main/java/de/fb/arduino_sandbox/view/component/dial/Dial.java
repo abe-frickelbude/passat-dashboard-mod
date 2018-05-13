@@ -1,11 +1,11 @@
-package de.fb.arduino_sandbox.view.component.color;
+package de.fb.arduino_sandbox.view.component.dial;
 
 import java.awt.*;
 import java.awt.MultipleGradientPaint.CycleMethod;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
@@ -13,6 +13,8 @@ import javax.swing.JComponent;
 import javax.swing.UIManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import de.fb.arduino_sandbox.view.component.MouseEventHook;
+import de.fb.arduino_sandbox.view.component.MouseMotionEventHook;
 
 public class Dial extends JComponent {
 
@@ -30,9 +32,13 @@ public class Dial extends JComponent {
     private static final float KNOB_DOT_RADIUS_RATIO = 0.15f;
     private static final float FOCUS_RING_RADIUS_RATIO = 0.9995f;
 
+    private static final float ROTATION_ARC_EXTENT = 270.0f;
+
     private static final Color DEFAULT_ARC_COLOR = new Color(0, 204, 255);
     private static final Color DEFAULT_KNOB_COLOR = new Color(180, 180, 180);
     private static final Color DEFAULT_FOCUS_RING_COLOR = new Color(200, 200, 200);
+
+    private static final int COARSE_CHANGE_THRESHOLD = 10;
 
     // graphical state
     private Color indicatorArcColor;
@@ -44,22 +50,21 @@ public class Dial extends JComponent {
     private BasicStroke focusRingStroke;
     private BasicStroke indicatorArcStroke;
 
-    // private float arcRadius;
-    // private float knobRadius;
-    // private float focusRingRadius;
-
     private Ellipse2D knob;
     private Shape knobDot;
     private Arc2D indicatorArc;
     private Ellipse2D focusRing;
 
-    // private Point2D.Float center;
     private AffineTransform viewportTransform;
     private Rectangle boundingRectangle;
+    private double knobRotationAngle;
 
     private boolean mouseInBounds;
     private boolean mousePressed;
+    private Point prevMouseCoords;
+    private Long prevTimestamp;
 
+    private IntegerRangeModel model;
     // private List<ActionListener> actionListeners;
     // private List<Runnable> actionCallbacks;
 
@@ -68,6 +73,8 @@ public class Dial extends JComponent {
         super();
         // actionCallbacks = Collections.emptyList();
         // actionListeners = Collections.emptyList();
+        model = new IntegerRangeModel(0, 100, 10, 1, 0);
+
         initColors();
         setMinimumSize(DEFAULT_SIZE);
         setMaximumSize(DEFAULT_SIZE);
@@ -75,6 +82,26 @@ public class Dial extends JComponent {
 
         initGeometry();
         registerEvents();
+    }
+
+    public void setMin(final int min) {
+        model.setMin(min);
+    }
+
+    public void setMax(final int max) {
+        model.setMax(max);
+    }
+
+    public void setValue(final int value) {
+        model.setValue(value);
+    }
+
+    public void setCoarseStep(final int coarseStep) {
+        model.setCoarseStep(coarseStep);
+    }
+
+    public void setFineStep(final int fineStep) {
+        model.setCoarseStep(fineStep);
     }
 
     // public void addActionListener(final ActionListener listener) {
@@ -104,11 +131,16 @@ public class Dial extends JComponent {
         ctx.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         ctx.transform(viewportTransform);
 
+        final AffineTransform prevTransform = ctx.getTransform();
+        ctx.rotate(knobRotationAngle);
+
         ctx.setColor(innerKnobColor);
         ctx.fill(knob);
 
         ctx.setColor(indicatorArcColor);
         ctx.fill(knobDot);
+
+        ctx.setTransform(prevTransform);
 
         ctx.setColor(indicatorArcColor);
 
@@ -132,18 +164,6 @@ public class Dial extends JComponent {
             ctx.draw(focusRing);
             ctx.setStroke(stroke);
         }
-
-        ////// Debug bbox ///////////
-
-        // ctx.setColor(Color.RED);
-        // Rectangle2D bbox = new Rectangle2D.Float(
-        // -getPreferredSize().width / 2,
-        // -getPreferredSize().height / 2 + 1,
-        // getPreferredSize().width, getPreferredSize().height - 1);
-        // ctx.draw(bbox);
-
-        /////////////////////////////
-
     }
 
     private void initColors() {
@@ -158,55 +178,6 @@ public class Dial extends JComponent {
         this.focusRingColor = DEFAULT_FOCUS_RING_COLOR;
     }
 
-    private void preRenderIcon() {
-
-        /*
-         * Note: using individual font metrics to calculate the appropriate size for the icon image is complicated and
-         * also inaccurate (because the said metrics only return the "general dimensions" of a font character and not the
-         * actual dimensions of a particular character), so instead we temporarily convert the icon into an actual
-         * GlyphVector and use the resulting Shape's bounding box to create an appropriately sized icon image, and also
-         * to render the icon.
-         */
-        // final int width = getPreferredSize().width;
-        // final int height = getPreferredSize().height;
-        // final int iconSize = Math.round(height * iconSizeRatio);
-        //
-        // final IkonHandler ikonHandler = IkonResolver.getInstance().resolve(icon.getIkon().getDescription());
-        // final Font font = ((Font) ikonHandler.getFont()).deriveFont(Font.PLAIN, iconSize);
-        //
-        // // this one is temporary, just to get a Graphics2D instance
-        // final BufferedImage tmp = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-        // Graphics2D ctx = Graphics2D.class.cast(tmp.getGraphics());
-        //
-        // // convert font character into a geometry and retrieve the bounding box
-        // final GlyphVector glyphVector = font.createGlyphVector(ctx.getFontMetrics(font).getFontRenderContext(),
-        // new char[] {
-        // icon.getIkon().getCode()
-        // });
-        //
-        // final Shape shape = glyphVector.getOutline();
-        // ctx.dispose();
-        // // log.info("Glyph bounds for {}: {}", icon.getIkon(), shape.getBounds2D());
-        //
-        // // initialize cached icon image
-        // iconImage = new BufferedImage(shape.getBounds().width, shape.getBounds().height, BufferedImage.TYPE_INT_ARGB);
-        // ctx = Graphics2D.class.cast(iconImage.getGraphics());
-        // ctx.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        //
-        // // glyph Y0 is always negative, so the whole coordinate space must be translated by -Y0!
-        // final AffineTransform xform = new AffineTransform();
-        // xform.setToTranslation(0.0, -shape.getBounds2D().getY());
-        //
-        // ctx.setColor(getForeground());
-        // ctx.setTransform(xform);
-        // ctx.fill(shape);
-        // ctx.dispose();
-        //
-        // iconPosition = new Point2D.Double(
-        // 0.5 * (width - shape.getBounds2D().getWidth()),
-        // 0.5 * (height - shape.getBounds().getHeight()));
-    }
-
     private void initGeometry() {
 
         int width = getPreferredSize().width;
@@ -214,7 +185,6 @@ public class Dial extends JComponent {
         float halfWidth = 0.5f * width;
         float halfHeight = 0.5f * height;
         float radius = halfWidth < halfHeight ? halfWidth : halfHeight;
-        // center = new Point2D.Float(halfWidth, halfHeight);
 
         // "global transform" that establishes a canonical Cartesian coordinate system with the center
         // @(half_width, half_height) with positive Y-axis pointing up
@@ -226,6 +196,7 @@ public class Dial extends JComponent {
         final float arcRadius = radius * ARC_RADIUS_RATIO;
 
         knob = new Ellipse2D.Float(-knobRadius, -knobRadius, 2.0f * knobRadius, 2.0f * knobRadius);
+        knobRotationAngle = 0.0;
 
         float knobDotRadius = radius * KNOB_DOT_RADIUS_RATIO;
         if (knobDotRadius < MIN_KNOB_DOT_RADIUS) {
@@ -252,15 +223,20 @@ public class Dial extends JComponent {
 
         indicatorArc = new Arc2D.Float(Arc2D.OPEN);
         indicatorArc.setFrame(-arcRadius, -arcRadius, 2.0f * arcRadius, 2.0f * arcRadius);
-
-        //////////////////////////////////////
         indicatorArc.setAngleStart(-225.0);
-        indicatorArc.setAngleExtent(1.0);
-
-        //////////////////////////////////////
+        indicatorArc.setAngleExtent(0.0);
 
         focusRing = new Ellipse2D.Float(-focusRingRadius, -focusRingRadius, 2.0f * focusRingRadius, 2.0f * focusRingRadius);
         focusRingStroke = new BasicStroke(FOCUS_RING_STROKE_WIDTH);
+    }
+
+    private void updateAngles() {
+
+        final float normValue = 1.0f * (model.getValue() - model.getMin()) / (model.getMax() - model.getMin());
+        final double angle = normValue * ROTATION_ARC_EXTENT;
+
+        indicatorArc.setAngleExtent(angle);
+        knobRotationAngle = -Math.toRadians(angle);
     }
 
     private void fireActionEvent() {
@@ -273,12 +249,102 @@ public class Dial extends JComponent {
         // }
     }
 
-    @SuppressWarnings("synthetic-access")
+    @SuppressWarnings("unused")
+    private void mouseClicked(final MouseEvent event) {
+        // NO-OP
+    }
+
+    private void mousePressed(final MouseEvent event) {
+        if (isEnabled() && boundingRectangle.contains(event.getPoint())) {
+            mousePressed = true;
+            prevMouseCoords = event.getPoint();
+            prevTimestamp = System.currentTimeMillis();
+            repaint();
+        }
+    }
+
+    private void mouseReleased(final MouseEvent event) {
+        if (isEnabled()) {
+            mousePressed = false;
+            prevMouseCoords = event.getPoint();
+            repaint();
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void mouseEntered(final MouseEvent event) {
+        if (isEnabled()) {
+            mouseInBounds = true;
+            repaint();
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void mouseExited(final MouseEvent event) {
+        if (isEnabled()) {
+            mouseInBounds = false;
+            repaint();
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void mouseMoved(final MouseEvent event) {
+        // NO-OP
+    }
+
+    private void mouseDragged(final MouseEvent event) {
+        if (isEnabled()) {
+
+            final Point mouseCoords = event.getPoint();
+            final long timeStamp = System.currentTimeMillis();
+
+            final int deltaX = mouseCoords.x - prevMouseCoords.x;
+            // final float x_accel = 1.0f * deltaX / (timeStamp - prevTimestamp);
+            final boolean coarse = Math.abs(deltaX) >= COARSE_CHANGE_THRESHOLD;
+
+            if (deltaX > 0) {
+                if (coarse) {
+                    model.coarseIncrement();
+                } else {
+                    model.fineIncrement();
+                }
+
+            } else if (deltaX < 0) {
+                if (coarse) {
+                    model.coarseDecrement();
+                } else {
+                    model.fineDecrement();
+                }
+            }
+
+            // log.info("delta x: {}, coarse: {}, value: {}", deltaX, coarse, model.getValue());
+            // update previous mouse coordinates
+            prevMouseCoords = mouseCoords;
+            prevTimestamp = timeStamp;
+            updateAngles();
+            repaint();
+        }
+    }
+
+    private void mouseWheelMoved(final MouseWheelEvent event) {
+
+        if (isEnabled()) {
+            if (event.getWheelRotation() > 0) {
+                model.fineDecrement();
+            } else if (event.getWheelRotation() < 0) {
+                model.fineIncrement();
+            }
+            updateAngles();
+            repaint();
+        }
+    }
+
     private void registerEvents() {
 
         this.addComponentListener(new ComponentAdapter() {
 
             @Override
+            @SuppressWarnings("synthetic-access")
             public void componentResized(final ComponentEvent event) {
                 super.componentResized(event);
                 initGeometry();
@@ -286,45 +352,11 @@ public class Dial extends JComponent {
             }
         });
 
-        this.addMouseListener(new MouseAdapter() {
+        this.addMouseListener(new MouseEventHook(
+            this::mouseClicked, this::mousePressed, this::mouseReleased,
+            this::mouseEntered, this::mouseExited));
 
-            @Override
-            public void mouseClicked(final MouseEvent event) {
-                if (isEnabled())
-                    fireActionEvent();
-            }
-
-            @Override
-            public void mousePressed(final MouseEvent event) {
-                if (isEnabled() && boundingRectangle.contains(event.getPoint())) {
-                    mousePressed = true;
-                    repaint();
-                }
-            }
-
-            @Override
-            public void mouseReleased(final MouseEvent event) {
-                if (isEnabled()) {
-                    mousePressed = false;
-                    repaint();
-                }
-            }
-
-            @Override
-            public void mouseEntered(final MouseEvent event) {
-                if (isEnabled()) {
-                    mouseInBounds = true;
-                    repaint();
-                }
-            }
-
-            @Override
-            public void mouseExited(final MouseEvent event) {
-                if (isEnabled()) {
-                    mouseInBounds = false;
-                    repaint();
-                }
-            }
-        });
+        this.addMouseMotionListener(new MouseMotionEventHook(this::mouseMoved, this::mouseDragged));
+        this.addMouseWheelListener(event -> mouseWheelMoved(event));
     }
 }

@@ -19,11 +19,11 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import de.fb.arduino_sandbox.view.component.color.BiColorSwatch;
-import de.fb.arduino_sandbox.view.component.color.ColorSwatch;
-import de.fb.arduino_sandbox.view.component.color.Dial;
 import de.fb.arduino_sandbox.view.component.color.TinyButton;
 import de.fb.arduino_sandbox.view.component.color.TinyButtonGroup;
+import de.fb.arduino_sandbox.view.component.color_swatch.BiColorSwatch;
+import de.fb.arduino_sandbox.view.component.color_swatch.ColorSwatch;
+import de.fb.arduino_sandbox.view.component.dial.Dial;
 
 public class SandboxPanel extends JPanel {
 
@@ -268,9 +268,15 @@ public class SandboxPanel extends JPanel {
         add(dial_1, "6, 13");
 
         dial_2 = new Dial();
+        dial_2.setEnabled(false);
         add(dial_2, "8, 13");
 
         dial_3 = new Dial();
+        dial_3.setValue(0);
+        dial_3.setFineStep(1);
+        dial_3.setCoarseStep(10);
+        dial_3.setMax(255);
+        dial_3.setMin(0);
         dial_3.setMinimumSize(new Dimension(48, 48));
         dial_3.setMaximumSize(new Dimension(48, 48));
         dial_3.setPreferredSize(new Dimension(48, 48));

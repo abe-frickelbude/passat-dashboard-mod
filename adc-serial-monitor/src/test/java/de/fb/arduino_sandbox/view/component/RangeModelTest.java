@@ -2,43 +2,76 @@ package de.fb.arduino_sandbox.view.component;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
-import de.fb.arduino_sandbox.view.component.color.RangeModel;
+import de.fb.arduino_sandbox.view.component.dial.IntegerRangeModel;
 
 public class RangeModelTest {
 
-
     @Test
-    public void testIncrement() {
+    public void testCoarseIncrement() {
 
-        RangeModel model = new RangeModel(0, 100, 1, 10);
+        IntegerRangeModel model = new IntegerRangeModel(0, 100, 10, 1, 10);
         assertEquals(10, model.getValue());
-        model.increment();
-        assertEquals(11, model.getValue());
+        model.coarseIncrement();
+        assertEquals(20, model.getValue());
     }
 
     @Test
-    public void testDecrement() {
+    public void testCoarseDecrement() {
 
-        RangeModel model = new RangeModel(0, 100, 1, 10);
+        IntegerRangeModel model = new IntegerRangeModel(0, 100, 10, 1, 20);
+        assertEquals(20, model.getValue());
+        model.coarseDecrement();
         assertEquals(10, model.getValue());
-        model.decrement();
-        assertEquals(9, model.getValue());
     }
 
     @Test
-    public void testClamp() {
+    public void testCoarseClamp() {
 
-        RangeModel model = new RangeModel(-10, 10, 1, 0);
+        IntegerRangeModel model = new IntegerRangeModel(-100, 100, 10, 1, 0);
 
         for (int i = 0; i < 100; i++) {
-            model.decrement();
+            model.coarseDecrement();
         }
         assertEquals(model.getMin(), model.getValue());
 
         for (int i = 0; i < 100; i++) {
-            model.increment();
+            model.coarseIncrement();
         }
+        assertEquals(model.getMax(), model.getValue());
+    }
 
+
+    @Test
+    public void testFineIncrement() {
+
+        IntegerRangeModel model = new IntegerRangeModel(0, 100, 10, 1, 10);
+        assertEquals(10, model.getValue());
+        model.fineIncrement();
+        assertEquals(11, model.getValue());
+    }
+
+    @Test
+    public void testFineDecrement() {
+
+        IntegerRangeModel model = new IntegerRangeModel(0, 100, 10, 1, 10);
+        assertEquals(10, model.getValue());
+        model.fineDecrement();
+        assertEquals(9, model.getValue());
+    }
+
+    @Test
+    public void testFineClamp() {
+
+        IntegerRangeModel model = new IntegerRangeModel(-10, 10, 10, 1, 0);
+
+        for (int i = 0; i < 100; i++) {
+            model.fineDecrement();
+        }
+        assertEquals(model.getMin(), model.getValue());
+
+        for (int i = 0; i < 100; i++) {
+            model.fineIncrement();
+        }
         assertEquals(model.getMax(), model.getValue());
     }
 
