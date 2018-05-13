@@ -1,7 +1,6 @@
 package de.fb.arduino_sandbox.view.component.dial;
 
 import java.awt.*;
-import java.awt.MultipleGradientPaint.CycleMethod;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
@@ -9,17 +8,20 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
 import javax.swing.JComponent;
 import javax.swing.UIManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import de.fb.arduino_sandbox.view.component.MouseEventHook;
 import de.fb.arduino_sandbox.view.component.MouseMotionEventHook;
 
 public class Dial extends JComponent {
 
-    private static final Logger log = LoggerFactory.getLogger(Dial.class);
-
+    // private static final Logger log = LoggerFactory.getLogger(Dial.class);
     private static final Dimension DEFAULT_SIZE = new Dimension(32, 32);
 
     private static final float ARC_STROKE_WIDTH = 3.0f;
@@ -41,12 +43,10 @@ public class Dial extends JComponent {
     private static final int COARSE_CHANGE_THRESHOLD = 10;
 
     // graphical state
-    private Color indicatorArcColor;
-    private Color innerKnobColor;
-    private Color outerKnobColor;
+    private Color knobColor;
     private Color focusRingColor;
+    private Color indicatorArcColor;
 
-    private RadialGradientPaint knobGradient;
     private BasicStroke focusRingStroke;
     private BasicStroke indicatorArcStroke;
 
@@ -60,19 +60,18 @@ public class Dial extends JComponent {
     private double knobRotationAngle;
 
     private boolean mouseInBounds;
-    private boolean mousePressed;
     private Point prevMouseCoords;
-    private Long prevTimestamp;
 
     private IntegerRangeModel model;
-    // private List<ActionListener> actionListeners;
-    // private List<Runnable> actionCallbacks;
+
+    private List<ChangeListener> changeListeners;
+    private List<Consumer<Integer>> changeCallbacks;
 
     public Dial() {
 
         super();
-        // actionCallbacks = Collections.emptyList();
-        // actionListeners = Collections.emptyList();
+        changeListeners = Collections.emptyList();
+        changeCallbacks = Collections.emptyList();
         model = new IntegerRangeModel(0, 100, 10, 1, 0);
 
         initColors();
@@ -84,39 +83,59 @@ public class Dial extends JComponent {
         registerEvents();
     }
 
+    public int getMin() {
+        return model.getMin();
+    }
+
     public void setMin(final int min) {
         model.setMin(min);
+    }
+
+    public int getMax() {
+        return model.getMax();
     }
 
     public void setMax(final int max) {
         model.setMax(max);
     }
 
+    public int getValue() {
+        return model.getValue();
+    }
+
     public void setValue(final int value) {
         model.setValue(value);
+    }
+
+    public int getCoarseStep() {
+        return model.getCoarseStep();
     }
 
     public void setCoarseStep(final int coarseStep) {
         model.setCoarseStep(coarseStep);
     }
 
+    public int getFineStep() {
+        return model.getFineStep();
+    }
+
     public void setFineStep(final int fineStep) {
         model.setCoarseStep(fineStep);
     }
 
-    // public void addActionListener(final ActionListener listener) {
-    // if (actionListeners.isEmpty()) {
-    // actionListeners = new ArrayList<>();
-    // }
-    // actionListeners.add(listener);
-    // }
-    //
-    // public void addActionCallback(final Runnable callback) {
-    // if (actionCallbacks.isEmpty()) {
-    // actionCallbacks = new ArrayList<>();
-    // }
-    // actionCallbacks.add(callback);
-    // }
+    public void addChangeListener(final ChangeListener listener) {
+        if (changeListeners.isEmpty()) {
+            changeListeners = new ArrayList<>();
+        }
+        changeListeners.add(listener);
+    }
+
+    public void addChangeCallback(final Consumer<Integer> callback) {
+        if (changeCallbacks.isEmpty()) {
+            changeCallbacks = new ArrayList<>();
+        }
+        changeCallbacks.add(callback);
+    }
 
     @Override
     public void revalidate() {
@@ -132,9 +151,9 @@ public class Dial extends JComponent {
         ctx.transform(viewportTransform);
 
         final AffineTransform prevTransform = ctx.getTransform();
-        ctx.rotate(knobRotationAngle);
 
-        ctx.setColor(innerKnobColor);
+        ctx.rotate(knobRotationAngle);
+        ctx.setColor(knobColor);
         ctx.fill(knob);
 
         ctx.setColor(indicatorArcColor);
@@ -142,22 +161,13 @@ public class Dial extends JComponent {
 
         ctx.setTransform(prevTransform);
 
-        ctx.setColor(indicatorArcColor);
-
         Stroke stroke = ctx.getStroke();
         ctx.setStroke(indicatorArcStroke);
+        ctx.setColor(indicatorArcColor);
         ctx.draw(indicatorArc);
         ctx.setStroke(stroke);
 
-        // final Paint prevPaint = ctx.getPaint();
-        // ctx.setPaint(knobGradient);
-        // ctx.fill(knob);
-        // ctx.setPaint(prevPaint);
-
         if (mouseInBounds && isEnabled()) {
-            // if (mousePressed) {
-            // } else {
-            // }
             ctx.setColor(focusRingColor);
             stroke = ctx.getStroke();
             ctx.setStroke(focusRingStroke);
@@ -169,10 +179,7 @@ public class Dial extends JComponent {
     private void initColors() {
 
         Color color = UIManager.getColor("Button.darcula.color1");
-        this.innerKnobColor = color != null ? color : DEFAULT_KNOB_COLOR;
-
-        color = UIManager.getColor("Button.darcula.color2");
-        this.outerKnobColor = color != null ? color : DEFAULT_KNOB_COLOR;
+        this.knobColor = color != null ? color : DEFAULT_KNOB_COLOR;
 
         this.indicatorArcColor = DEFAULT_ARC_COLOR;
         this.focusRingColor = DEFAULT_FOCUS_RING_COLOR;
@@ -211,14 +218,6 @@ public class Dial extends JComponent {
         xform.translate(-knobRadius + 2 + dot.getWidth() / 2, 0.0);
         knobDot = xform.createTransformedShape(dot);
 
-        //@formatter:off
-        knobGradient = new RadialGradientPaint(halfWidth, halfHeight, knobRadius,
-            halfWidth  + 2, halfWidth + 2,
-            new float[] { 0.0f, 1.0f }, 
-            new Color[] { outerKnobColor, innerKnobColor },
-            CycleMethod.NO_CYCLE);
-        //@formatter:on
-
         indicatorArcStroke = new BasicStroke(ARC_STROKE_WIDTH);
 
         indicatorArc = new Arc2D.Float(Arc2D.OPEN);
@@ -239,14 +238,15 @@ public class Dial extends JComponent {
         knobRotationAngle = -Math.toRadians(angle);
     }
 
-    private void fireActionEvent() {
-        // final ActionEvent event = new ActionEvent(this, 0, StringUtils.EMPTY);
-        // for (ActionListener listener : actionListeners) {
-        // listener.actionPerformed(event);
-        // }
-        // for (Runnable callback : actionCallbacks) {
-        // callback.run();
-        // }
+    private void fireChangeEvent() {
+
+        final ChangeEvent event = new ChangeEvent(this);
+        for (ChangeListener listener : changeListeners) {
+            listener.stateChanged(event);
+        }
+        for (Consumer<Integer> callback : changeCallbacks) {
+            callback.accept(this.getValue());
+        }
     }
 
     @SuppressWarnings("unused")
@@ -256,16 +256,13 @@ public class Dial extends JComponent {
 
     private void mousePressed(final MouseEvent event) {
         if (isEnabled() && boundingRectangle.contains(event.getPoint())) {
-            mousePressed = true;
             prevMouseCoords = event.getPoint();
-            prevTimestamp = System.currentTimeMillis();
             repaint();
         }
     }
 
     private void mouseReleased(final MouseEvent event) {
         if (isEnabled()) {
-            mousePressed = false;
             prevMouseCoords = event.getPoint();
             repaint();
         }
@@ -293,13 +290,14 @@ public class Dial extends JComponent {
     }
 
     private void mouseDragged(final MouseEvent event) {
+
         if (isEnabled()) {
-
             final Point mouseCoords = event.getPoint();
-            final long timeStamp = System.currentTimeMillis();
-
             final int deltaX = mouseCoords.x - prevMouseCoords.x;
-            // final float x_accel = 1.0f * deltaX / (timeStamp - prevTimestamp);
+
+            // update previous mouse coordinates
+            prevMouseCoords = mouseCoords;
+
             final boolean coarse = Math.abs(deltaX) >= COARSE_CHANGE_THRESHOLD;
 
             if (deltaX > 0) {
@@ -317,10 +315,7 @@ public class Dial extends JComponent {
                 }
             }
 
-            // log.info("delta x: {}, coarse: {}, value: {}", deltaX, coarse, model.getValue());
-            // update previous mouse coordinates
-            prevMouseCoords = mouseCoords;
-            prevTimestamp = timeStamp;
+            fireChangeEvent();
             updateAngles();
             repaint();
         }
@@ -334,6 +329,8 @@ public class Dial extends JComponent {
             } else if (event.getWheelRotation() < 0) {
                 model.fineIncrement();
             }
+
+            fireChangeEvent();
             updateAngles();
             repaint();
         }

@@ -274,12 +274,15 @@ public class SandboxPanel extends JPanel {
         dial_3 = new Dial();
         dial_3.setValue(0);
         dial_3.setFineStep(1);
-        dial_3.setCoarseStep(10);
+        dial_3.setCoarseStep(25);
         dial_3.setMax(255);
         dial_3.setMin(0);
         dial_3.setMinimumSize(new Dimension(48, 48));
         dial_3.setMaximumSize(new Dimension(48, 48));
         dial_3.setPreferredSize(new Dimension(48, 48));
+
+        dial_3.addChangeCallback(value -> log.info("Dial value: {}", value));
+
         add(dial_3, "16, 15");
 
     }
