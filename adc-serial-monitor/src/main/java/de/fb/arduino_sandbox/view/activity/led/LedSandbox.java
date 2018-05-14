@@ -8,15 +8,15 @@ import org.springframework.stereotype.Component;
 import de.fb.arduino_sandbox.view.activity.Activity;
 
 @Component
-public class RgbwLedFiddlebox implements Activity {
+public class LedSandbox implements Activity {
 
-    private static final String TITLE = "WS2812 Fiddlebox";
+    private static final String TITLE = "WS2812 Sandbox";
 
-    private final RgbwLedMainPanel mainPanel;
-    private final RgbwLedControlPanel controlPanel;
+    private final LedSandboxMainPanel mainPanel;
+    private final LedSandboxControlPanel controlPanel;
 
     @Autowired
-    public RgbwLedFiddlebox(final RgbwLedMainPanel mainPanel, final RgbwLedControlPanel controlPanel) {
+    public LedSandbox(final LedSandboxMainPanel mainPanel, final LedSandboxControlPanel controlPanel) {
         this.mainPanel = mainPanel;
         this.controlPanel = controlPanel;
     }

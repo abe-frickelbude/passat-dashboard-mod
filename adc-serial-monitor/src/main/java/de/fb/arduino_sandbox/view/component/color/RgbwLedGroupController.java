@@ -23,7 +23,7 @@ public class RgbwLedGroupController extends JPanel {
         super();
         this.rgbwSwatchGroups = new ArrayList<>();
         this.changeCallbacks = new ArrayList<>();
-        this.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        this.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         initUI();
     }
 
@@ -53,6 +53,7 @@ public class RgbwLedGroupController extends JPanel {
             swatchGroup.setGroupSize(group.getGroupSize());
             appendSwatchGroup(swatchGroup);
         }
+        repaint();
     }
 
     public void addChangeCallback(final Consumer<RgbwColorGroups> callback) {
