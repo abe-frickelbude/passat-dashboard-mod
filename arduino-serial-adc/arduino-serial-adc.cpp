@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <HardwareSerial.h>
 
 const int INPUT_PIN = A0;
 
@@ -10,12 +11,20 @@ const int BAUD_RATE = 19200;
 //const int BAUD_RATE = 57600;
 //const int BAUD_RATE = 115200;
 
+const int MAX_DIGITAL_PIN = 14;
+
 void setup() {
 
 	pinMode(INPUT_PIN, INPUT);
 	Serial.begin(BAUD_RATE);
-	while(!Serial) {
+	while (!Serial) {
 		// wait until connected
+	}
+
+	// Turn off everything (not on RXTX)
+	for (int index = 2; index < MAX_DIGITAL_PIN; index++) {
+		pinMode(index, OUTPUT);
+		digitalWrite(index, LOW);
 	}
 }
 
@@ -27,11 +36,13 @@ void loop() {
 	 * some ADC samples will be dropped!
 	 */
 	//if (Serial.availableForWrite() >= sizeof(int)) {
-		int value = analogRead(INPUT_PIN);
-		Serial.println(value);
-		//Serial.flush();
-	//}
 
+	int value = analogRead(INPUT_PIN);
+	Serial.println(value);
+
+	//Serial.println(123456789);
+	//Serial.flush();
+	//}
 	//int value = analogRead(INPUT_PIN);
 	//Serial.println(value);
 	//delay(10);
