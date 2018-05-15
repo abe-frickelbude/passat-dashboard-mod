@@ -22,6 +22,8 @@
 		<source.encoding>UTF-8</source.encoding>
 		<language.version>1.8</language.version>
 
+		<kotlin.version>1.2.41</kotlin.version>
+
 		<!-- dependency versions -->
 		<commons-lang.version>3.7</commons-lang.version>
 		<commons-collections4.version>4.1</commons-collections4.version>
@@ -49,7 +51,7 @@
 
 		<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>jul-to-slf4j</artifactId>	
+			<artifactId>jul-to-slf4j</artifactId>
 		</dependency>
 
 		<dependency>
@@ -80,7 +82,17 @@
 			<artifactId>commons-math3</artifactId>
 			<version>${commons-math.version}</version>
 		</dependency>
-			
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-yaml</artifactId>
+		</dependency>
+
 		<!-- extra Swing layout managers -->
 		<dependency>
 			<groupId>com.jgoodies</groupId>
@@ -188,7 +200,7 @@
 				<directory>${project.basedir}/src/test/resources</directory>
 			</testResource>
 		</testResources>
-
+		
 		<plugins>
 
 			<plugin>
