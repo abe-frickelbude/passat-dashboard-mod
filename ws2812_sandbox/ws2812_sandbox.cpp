@@ -5,6 +5,7 @@
 ///
 /// This is the simplest exmple to use the library.
 ///
+///
 /// This example is for an Arduino Uno board with a LED strip connected to
 /// port D6. Targetting any other board requires you to change something.
 /// The program sends an array of pixels to display on the strip.
