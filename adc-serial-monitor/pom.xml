@@ -147,6 +147,11 @@
 			<version>${ardulink.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.bortbort.arduino</groupId>
+			<artifactId>filo-firmata</artifactId>
+			<version>0.1.11</version>
+		</dependency>
 
 		<!-- Spring Framework dependencies -->
 		<dependency>
@@ -200,7 +205,7 @@
 				<directory>${project.basedir}/src/test/resources</directory>
 			</testResource>
 		</testResources>
-		
+
 		<plugins>
 
 			<plugin>

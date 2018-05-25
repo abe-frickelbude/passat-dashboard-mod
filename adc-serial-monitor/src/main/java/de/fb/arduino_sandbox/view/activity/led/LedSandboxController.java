@@ -1,5 +1,6 @@
 package de.fb.arduino_sandbox.view.activity.led;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -14,6 +15,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.fb.arduino_sandbox.service.ArduinoLinkService;
+import de.fb.arduino_sandbox.view.component.color.RgbwColorGroup;
 import de.fb.arduino_sandbox.view.component.color.RgbwColorGroups;
 
 @Component
@@ -73,6 +75,19 @@ public class LedSandboxController {
         } catch (IOException ex) {
             log.error(ex.getMessage(), ex);
         }
+    }
+
+    private String convertLedData(final RgbwColorGroups groups) {
+
+        for (RgbwColorGroup group : groups.getGroups()) {
+
+            Color rgbw = group.getColor();
+            int white = group.getLuminance();
+            int groupSize = group.getGroupSize();
+
+        }
+
+        return null;
     }
 
 }

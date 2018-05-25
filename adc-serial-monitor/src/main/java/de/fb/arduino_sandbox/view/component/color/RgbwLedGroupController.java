@@ -14,8 +14,6 @@ import javax.swing.JPanel;
  */
 public class RgbwLedGroupController extends JPanel {
 
-    // private static final Logger log = LoggerFactory.getLogger(RgbwLedGroupController.class);
-
     private final List<RgbwSwatchGroup> rgbwSwatchGroups;
     private final List<Consumer<RgbwColorGroups>> changeCallbacks;
 
