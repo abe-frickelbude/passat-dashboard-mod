@@ -35,6 +35,9 @@ sk6812b<D, 6> strip;
 
 // ------------------------------------------------------------
 
+void resetPixels();
+void updatePixel(byte index, byte r, byte g, byte b, byte w);
+void updateColors(char r, char g, char b, char w);
 void sysexCallback(byte command, byte argc, byte *argv);
 
 void setup()
@@ -44,6 +47,11 @@ void setup()
     Firmata.begin(57600); // ?! Can't use a previously defined uint16_t constant here!
 
     pinMode(LED_BUILTIN, OUTPUT);
+
+    // Turn off the LEDs
+    resetPixels();
+
+    //strip.clear(2 * NUM_PIXELS); <<---- Causes shifting of pixels by the number of positions passed to this method!! WTF ?!
 }
 
 void loop()
@@ -61,9 +69,52 @@ void sysexCallback(byte command, byte argc, byte *argv)
     case PIXEL_COMMAND:
         testLedOn = !testLedOn;
         digitalWrite(LED_BUILTIN, testLedOn ? HIGH : LOW);
+
+        if (testLedOn)
+        {
+            updatePixel(0, 10, 0, 0, 1);
+            updatePixel(1, 0, 10, 0, 1);
+            updatePixel(2, 0, 0, 10, 1);
+        }
+        else
+        {
+            resetPixels();
+        }
+        strip.sendPixels(NUM_PIXELS, pixels);
+
         break;
 
     default:
         break;
     }
+}
+
+void updateColors(char r, char g, char b, char w)
+{
+    for (int i = 0; i < NUM_PIXELS; i++)
+    {
+        pixels[i].r = r;
+        pixels[i].g = g;
+        pixels[i].b = b;
+        pixels[i].w = w;
+    }
+    stateChanged = true;
+}
+
+void updatePixel(byte index, byte r, byte g, byte b, byte w)
+{
+    pixels[index].r = r;
+    pixels[index].g = g;
+    pixels[index].b = b;
+    pixels[index].w = w;
+    stateChanged = true;
+}
+
+void resetPixels()
+{
+    for (int i = 0; i < NUM_PIXELS; i++)
+    {
+        pixels[i].r = pixels[i].g = pixels[i].b = pixels[i].w = 0x00;
+    }
+    stateChanged = true;
 }
