@@ -36,6 +36,10 @@ public class FirmataSandbox {
 
         log.info("Firmware: {}, {}.{}", message.getFirmwareName(), message.getMajorVersion(), message.getMinorVersion());
 
+        // Test LED color transmission
+
+        firmata.sendMessage(new RgbwPixelSetMessage());
+
         firmata.stop();
     }
 
