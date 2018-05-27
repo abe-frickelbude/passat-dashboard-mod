@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import de.fb.arduino_sandbox.math.*;
-import de.fb.arduino_sandbox.service.ArduinoLinkService;
+import de.fb.arduino_sandbox.service.HardwareUplink;
 import de.fb.arduino_sandbox.util.*;
 import de.fb.arduino_sandbox.view.TraceData;
 import de.fb.arduino_sandbox.view.activity.adc.filter.*;
@@ -34,7 +34,7 @@ public class AdcTracerController {
     private static final int INPUT_PIN = Constants.PIN_A0;
 
     private final ApplicationContext appContext;
-    private final ArduinoLinkService arduinoLinkService;
+    private final HardwareUplink arduinoLinkService;
 
     private final AtomicInteger updateFrequency;
     private final AtomicBoolean updateActive;
@@ -62,7 +62,7 @@ public class AdcTracerController {
 
     @Autowired
     public AdcTracerController(final ApplicationContext appContext,
-        final ArduinoLinkService arduinoLinkService) {
+        final HardwareUplink arduinoLinkService) {
 
         this.appContext = appContext;
         this.arduinoLinkService = arduinoLinkService;

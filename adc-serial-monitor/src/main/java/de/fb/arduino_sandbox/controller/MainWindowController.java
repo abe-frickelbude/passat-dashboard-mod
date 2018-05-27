@@ -6,7 +6,7 @@ import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-import de.fb.arduino_sandbox.service.ArduinoLinkService;
+import de.fb.arduino_sandbox.service.HardwareUplink;
 import de.fb.arduino_sandbox.view.*;
 
 /**
@@ -25,7 +25,7 @@ public class MainWindowController {
     private ApplicationContext appContext;
 
     @Autowired
-    private ArduinoLinkService arduinoLinkService;
+    private HardwareUplink hardwareLink;
 
     public MainWindowController() {
 
@@ -37,11 +37,11 @@ public class MainWindowController {
     }
 
     public List<String> getAvailablePorts() {
-        return arduinoLinkService.getAvailablePorts();
+        return hardwareLink.getAvailablePorts();
     }
 
     public void connect(final SerialPortParams params) {
-        arduinoLinkService.connect(params);
+        hardwareLink.connect(params);
     }
 
     public Boolean requestAppExit() {
@@ -54,7 +54,7 @@ public class MainWindowController {
     }
 
     public void exitApp() {
-        arduinoLinkService.disconnect();
+        hardwareLink.disconnect();
         // EXTEND IF NECESSARY add any necessary application context and resources cleanup code
         System.exit(0);
     }

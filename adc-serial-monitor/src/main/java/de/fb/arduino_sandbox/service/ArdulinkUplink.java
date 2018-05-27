@@ -1,7 +1,11 @@
 package de.fb.arduino_sandbox.service;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import javax.annotation.PreDestroy;
 import org.apache.commons.lang3.ArrayUtils;
@@ -15,7 +19,7 @@ import org.ardulink.util.URIs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import de.fb.arduino_sandbox.model.RgbwPixel;
 import de.fb.arduino_sandbox.util.Constants;
 import de.fb.arduino_sandbox.view.SerialPortParams;
 import jssc.SerialPortList;
@@ -32,10 +36,10 @@ import jssc.SerialPortList;
  * @author Ibragim Kuliev
  *
  */
-@Service
-public class ArduinoLinkService {
+// @Service
+public class ArdulinkUplink implements HardwareUplink {
 
-    private static final Logger log = LoggerFactory.getLogger(ArduinoLinkService.class);
+    private static final Logger log = LoggerFactory.getLogger(ArdulinkUplink.class);
 
     private Link serialLink;
 
@@ -48,11 +52,12 @@ public class ArduinoLinkService {
     @Value("${arduino.connect.timeout}")
     private Integer waitTimeout;
 
-    public ArduinoLinkService() {
+    public ArdulinkUplink() {
         adcSampleConsumers = new HashMap<>();
         eventListeners = new HashMap<>();
     }
 
+    @Override
     public List<String> getAvailablePorts() {
 
         List<String> portNames = Collections.emptyList();
@@ -67,6 +72,7 @@ public class ArduinoLinkService {
         return portNames;
     }
 
+    @Override
     public void connect(final SerialPortParams params) {
 
         log.info("Connecting to Arduino on {} with {} baud...", params.getPortName(), params.getBaudRate());
@@ -80,6 +86,7 @@ public class ArduinoLinkService {
         log.info("Connected!");
     }
 
+    @Override
     public void disconnect() {
 
         if (serialLink != null) {
@@ -91,10 +98,17 @@ public class ArduinoLinkService {
         }
     }
 
+    @Override
+    public void sendRgbwPixels(final List<RgbwPixel> pixels) {
+        // TODO Auto-generated method stub
+
+    }
+    @Override
     public void setAdcSampleConsumer(final Integer pin, final Consumer<Integer> consumer) {
         adcSampleConsumers.put(pin, consumer);
     }
 
+    @Override
     public void removeAdcSampleConsumer(final Integer pin) {
         if (adcSampleConsumers.containsKey(pin)) {
             adcSampleConsumers.remove(pin);
@@ -102,6 +116,7 @@ public class ArduinoLinkService {
         }
     }
 
+    @Override
     public void startListening(final Integer pin) {
 
         if (serialLink != null) {
@@ -132,6 +147,7 @@ public class ArduinoLinkService {
         }
     }
 
+    @Override
     public void stopListening(final Integer pin) {
 
         if (serialLink != null) {
@@ -146,6 +162,7 @@ public class ArduinoLinkService {
         }
     }
 
+    @Override
     public void stopAll() {
         for (int pin : Constants.ANALOG_PINS) {
             stopListening(pin);
@@ -172,4 +189,6 @@ public class ArduinoLinkService {
             }
         }
     }
+
+
 }

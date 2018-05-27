@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.9.RELEASE</version>
+		<version>1.5.13.RELEASE</version>
 	</parent>
 
 	<prerequisites>
@@ -21,8 +21,6 @@
 	<properties>
 		<source.encoding>UTF-8</source.encoding>
 		<language.version>1.8</language.version>
-
-		<kotlin.version>1.2.41</kotlin.version>
 
 		<!-- dependency versions -->
 		<commons-lang.version>3.7</commons-lang.version>

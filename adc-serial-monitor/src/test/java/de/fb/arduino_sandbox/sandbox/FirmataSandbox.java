@@ -6,6 +6,8 @@ import com.bortbort.arduino.FiloFirmata.Firmata;
 import com.bortbort.arduino.FiloFirmata.FirmataConfiguration;
 import com.bortbort.arduino.FiloFirmata.Messages.SysexReportFirmwareMessage;
 import com.bortbort.arduino.FiloFirmata.Messages.SysexReportFirmwareQueryMessage;
+import de.fb.arduino_sandbox.service.firmata.ResetAllPixelsMessage;
+import de.fb.arduino_sandbox.service.firmata.SetPixelMessage;
 
 public class FirmataSandbox {
 
@@ -37,7 +39,25 @@ public class FirmataSandbox {
         log.info("Firmware: {}, {}.{}", message.getFirmwareName(), message.getMajorVersion(), message.getMinorVersion());
 
         // Test LED color transmission
-        firmata.sendMessage(new RgbwPixelSetMessage());
+
+        // firmata.sendMessage(new ResetAllPixelsMessage());
+
+        firmata.sendMessage(new SetPixelMessage(0, 1, 0, 0, 0));
+        firmata.sendMessage(new SetPixelMessage(1, 0, 1, 0, 0));
+        // firmata.sendMessage(new SetPixelMessage(2, 0, 0, 1, 0));
+        // firmata.sendMessage(new SetPixelMessage(3, 0, 0, 0, 1));
+        // firmata.sendMessage(new SetPixelMessage(4, 1, 1, 0, 0));
+        // firmata.sendMessage(new SetPixelMessage(5, 0, 1, 1, 0));
+        // firmata.sendMessage(new SetPixelMessage(6, 1, 0, 1, 0));
+        // firmata.sendMessage(new SetPixelMessage(7, 0, 0, 10, 10));
+
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        firmata.sendMessage(new ResetAllPixelsMessage());
 
         firmata.stop();
     }
