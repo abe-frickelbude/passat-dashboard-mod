@@ -19,6 +19,7 @@ public class LedSandboxControlPanel extends JPanel {
 
     private JButton loadButton;
     private JButton saveButton;
+    private JButton resetButton;
 
     private LedSandboxController controller;
 
@@ -61,6 +62,9 @@ public class LedSandboxControlPanel extends JPanel {
                 FormSpecs.RELATED_GAP_ROWSPEC,
         }));
 
+        resetButton = new JButton("Reset LEDs");
+        add(resetButton, "2, 2");
+
         loadButton = new JButton("Load configuration...");
         add(loadButton, "2, 18");
 
@@ -72,6 +76,7 @@ public class LedSandboxControlPanel extends JPanel {
 
         loadButton.addActionListener(event -> openLoadDialog());
         saveButton.addActionListener(event -> openSaveDialog());
+        resetButton.addActionListener(event -> controller.resetLedConfiguration());
     }
 
     private void openLoadDialog() {

@@ -15,8 +15,10 @@ import org.springframework.stereotype.Service;
 import com.bortbort.arduino.FiloFirmata.Firmata;
 import com.bortbort.arduino.FiloFirmata.FirmataConfiguration;
 import de.fb.arduino_sandbox.model.RgbwPixel;
-import de.fb.arduino_sandbox.service.firmata.ResetAllPixelsMessage;
-import de.fb.arduino_sandbox.service.firmata.SetPixelMessage;
+import de.fb.arduino_sandbox.service.firmata.ResetPixelsCommand;
+import de.fb.arduino_sandbox.service.firmata.SetNumPixelsCommand;
+import de.fb.arduino_sandbox.service.firmata.SetPixelCommand;
+import de.fb.arduino_sandbox.service.firmata.ShowPixelsCommand;
 import de.fb.arduino_sandbox.util.Constants;
 import de.fb.arduino_sandbox.view.SerialPortParams;
 import jssc.SerialPortList;
@@ -137,22 +139,32 @@ public class FirmataUplink implements HardwareUplink {
     }
 
     @Override
+    public void resetPixels() {
+        if (firmataLink != null && firmataLink.getStarted()) {
+            // clear out previous LED strip configuration
+            firmataLink.sendMessage(new ResetPixelsCommand());
+        }
+    }
+
+    @Override
     public void sendRgbwPixels(final List<RgbwPixel> pixels) {
 
         if (firmataLink != null && firmataLink.getStarted()) {
 
-            // clear out previous LED strip configuration
-            firmataLink.sendMessage(new ResetAllPixelsMessage());
+            // supply the correct number of pixels to use (important on the firmware side !!)
+            firmataLink.sendMessage(new SetNumPixelsCommand(pixels.size()));
 
             for (int index = 0; index < pixels.size(); index++) {
 
                 final RgbwPixel pixel = pixels.get(index);
-                SetPixelMessage pixelMessage = new SetPixelMessage(index,
+                SetPixelCommand pixelMessage = new SetPixelCommand(index,
                     pixel.getRed(), pixel.getGreen(), pixel.getBlue(),
                     pixel.getWhite());
 
                 firmataLink.sendMessage(pixelMessage);
             }
+
+            firmataLink.sendMessage(new ShowPixelsCommand());
         }
     }
 

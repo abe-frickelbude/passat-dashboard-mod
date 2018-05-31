@@ -5,14 +5,14 @@ import org.junit.Test;
 import com.bortbort.arduino.FiloFirmata.FirmataHelper;
 import com.bortbort.arduino.FiloFirmata.Parser.CommandBytes;
 import de.fb.arduino_sandbox.service.firmata.PixelCommands;
-import de.fb.arduino_sandbox.service.firmata.SetPixelMessage;
+import de.fb.arduino_sandbox.service.firmata.SetPixelCommand;
 
 public class SetPixelMessageTest {
 
     @Test
     public void testSerialize() {
 
-        final SetPixelMessage message = new SetPixelMessage(13, 34, 55, 202, 176);
+        final SetPixelCommand message = new SetPixelCommand(13, 34, 55, 202, 176);
 
         final byte[] messageData = message.toByteArray();
 

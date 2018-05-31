@@ -5,7 +5,9 @@ public class PixelCommands {
 
     public static final byte PIXEL_SYSEX = 0x40;
 
-    public static final byte SET_PIXEL = 0x10;
-    public static final byte RESET_PIXEL = 0x11;
-    public static final byte RESET_ALL = 0x12;
+    public static final byte SET_NUM_PIXELS = 0x01;
+    public static final byte SET_PIXEL = 0x02;
+    public static final byte RESET_PIXEL = 0x03;
+    public static final byte RESET_ALL = 0x04;
+    public static final byte SHOW_PIXELS = 0x05;
 }

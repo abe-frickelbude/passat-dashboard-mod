@@ -50,6 +50,10 @@ public class LedSandboxController {
         this.configUpdater = callback;
     }
 
+    public void resetLedConfiguration() {
+        hardwareUplink.resetPixels();
+    }
+
     public void updateLedConfiguration(final RgbwColorGroups colorGroups) {
 
         final List<RgbwPixel> pixels = prepareLedData(colorGroups);

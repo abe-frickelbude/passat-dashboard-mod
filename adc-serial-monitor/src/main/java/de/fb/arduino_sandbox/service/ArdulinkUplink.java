@@ -190,5 +190,10 @@ public class ArdulinkUplink implements HardwareUplink {
         }
     }
 
+    @Override
+    public void resetPixels() {
+        // TODO Auto-generated method stub
+
+    }
 
 }

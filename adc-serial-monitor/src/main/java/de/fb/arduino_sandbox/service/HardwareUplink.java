@@ -25,4 +25,6 @@ public interface HardwareUplink {
 
     void sendRgbwPixels(List<RgbwPixel> pixels);
 
+    void resetPixels();
+
 }

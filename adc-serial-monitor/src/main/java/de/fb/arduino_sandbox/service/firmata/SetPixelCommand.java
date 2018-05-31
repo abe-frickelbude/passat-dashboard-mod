@@ -14,9 +14,9 @@ import com.bortbort.arduino.FiloFirmata.Messages.TransmittableSysexMessage;
  * value & 0x7F -> mask out the MSB, used for conversion to 7-bit byte
  *
  */
-public class SetPixelMessage extends TransmittableSysexMessage {
+public class SetPixelCommand extends TransmittableSysexMessage {
 
-    private static final Logger log = LoggerFactory.getLogger(SetPixelMessage.class);
+    private static final Logger log = LoggerFactory.getLogger(SetPixelCommand.class);
 
     private final byte index;
     private final byte rgbw[];
@@ -34,11 +34,11 @@ public class SetPixelMessage extends TransmittableSysexMessage {
      * @param w
      *        can be 0 <= w <= 255 (sent as 2 7-bit bytes)
      */
-    public SetPixelMessage(final int index, final int r, final int g, final int b, final int w) {
+    public SetPixelCommand(final int index, final int r, final int g, final int b, final int w) {
         this((byte) index, (byte) r, (byte) g, (byte) b, (byte) w);
     }
 
-    public SetPixelMessage(final byte index, final byte r, final byte g, final byte b, final byte w) {
+    public SetPixelCommand(final byte index, final byte r, final byte g, final byte b, final byte w) {
         super(PixelCommands.PIXEL_SYSEX);
 
         this.index = index;

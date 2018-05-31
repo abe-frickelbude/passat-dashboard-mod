@@ -3,9 +3,9 @@ package de.fb.arduino_sandbox.service.firmata;
 import java.io.ByteArrayOutputStream;
 import com.bortbort.arduino.FiloFirmata.Messages.TransmittableSysexMessage;
 
-public class ResetAllPixelsMessage extends TransmittableSysexMessage {
+public class ResetPixelsCommand extends TransmittableSysexMessage {
 
-    public ResetAllPixelsMessage() {
+    public ResetPixelsCommand() {
         super(PixelCommands.PIXEL_SYSEX);
     }
 
