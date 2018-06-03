@@ -20,6 +20,7 @@ public class LedSandboxControlPanel extends JPanel {
     private JButton loadButton;
     private JButton saveButton;
     private JButton resetButton;
+    private JButton reInitButton;
 
     private LedSandboxController controller;
 
@@ -65,6 +66,9 @@ public class LedSandboxControlPanel extends JPanel {
         resetButton = new JButton("Reset LEDs");
         add(resetButton, "2, 2");
 
+        reInitButton = new JButton("Re-init LEDs");
+        add(reInitButton, "2, 4");
+
         loadButton = new JButton("Load configuration...");
         add(loadButton, "2, 18");
 
@@ -77,6 +81,7 @@ public class LedSandboxControlPanel extends JPanel {
         loadButton.addActionListener(event -> openLoadDialog());
         saveButton.addActionListener(event -> openSaveDialog());
         resetButton.addActionListener(event -> controller.resetLedConfiguration());
+        reInitButton.addActionListener(event -> controller.reInitLedConfiguration());
     }
 
     private void openLoadDialog() {

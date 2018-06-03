@@ -5,14 +5,18 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.util.HashMap;
 import java.util.Map;
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import org.apache.commons.lang3.ArrayUtils;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import de.fb.arduino_sandbox.view.DarculaUiColors;
-import de.fb.arduino_sandbox.view.component.color_swatch.JColorSwatch;
+import de.fb.arduino_sandbox.view.component.color_swatch.ColorSwatch;
 import info.monitorenter.gui.chart.IAxis;
 import info.monitorenter.gui.chart.ITrace2D;
 import info.monitorenter.gui.chart.ZoomableChart;
@@ -26,14 +30,14 @@ public class ZoomableChartView extends JPanel {
     private ZoomableChart chart;
     private final Map<String, ITrace2D> traces;
 
-    private JColorSwatch backgroundColorSwatch;
-    private JColorSwatch foregroundColorSwatch;
-    private JColorSwatch gridColorSwatch;
+    private ColorSwatch backgroundColorSwatch;
+    private ColorSwatch foregroundColorSwatch;
+    private ColorSwatch gridColorSwatch;
+    private ColorSwatch traceColorSwatch;
 
     private JCheckBox showXaxisCheckBox;
     private JCheckBox showYaxisCheckBox;
     private JComboBox<String> traceSelectionBox;
-    private JColorSwatch traceColorSwatch;
     private JButton resetZoomButton;
 
     public ZoomableChartView() {
@@ -154,11 +158,11 @@ public class ZoomableChartView extends JPanel {
             new RowSpec[] {
                 RowSpec.decode("8dlu"),
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.PREF_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.PREF_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.PREF_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
         }));
 
@@ -168,14 +172,20 @@ public class ZoomableChartView extends JPanel {
         JLabel lblNewLabel = new JLabel("Background");
         controlPanel.add(lblNewLabel, "12, 3, left, default");
 
-        backgroundColorSwatch = new JColorSwatch();
-        controlPanel.add(backgroundColorSwatch, "14, 3, left, default");
+        backgroundColorSwatch = new ColorSwatch();
+        backgroundColorSwatch.setCornerRadius(4);
+        backgroundColorSwatch.setPreferredSize(new Dimension(20, 20));
+        backgroundColorSwatch.setBorderEnabled(true);
+        controlPanel.add(backgroundColorSwatch, "14, 3, left, center");
 
         traceSelectionBox = new JComboBox<>();
-        controlPanel.add(traceSelectionBox, "18, 3, right, default");
+        controlPanel.add(traceSelectionBox, "18, 3, right, center");
 
-        traceColorSwatch = new JColorSwatch();
-        controlPanel.add(traceColorSwatch, "20, 3");
+        traceColorSwatch = new ColorSwatch();
+        traceColorSwatch.setPreferredSize(new Dimension(20, 20));
+        traceColorSwatch.setCornerRadius(4);
+        traceColorSwatch.setBorderEnabled(true);
+        controlPanel.add(traceColorSwatch, "20, 3, left, default");
 
         showYaxisCheckBox = new JCheckBox("Y axis");
         controlPanel.add(showYaxisCheckBox, "2, 5");
@@ -183,8 +193,11 @@ public class ZoomableChartView extends JPanel {
         JLabel lblNewLabel_1 = new JLabel("Foreground");
         controlPanel.add(lblNewLabel_1, "12, 5, left, default");
 
-        foregroundColorSwatch = new JColorSwatch();
-        controlPanel.add(foregroundColorSwatch, "14, 5, left, default");
+        foregroundColorSwatch = new ColorSwatch();
+        foregroundColorSwatch.setPreferredSize(new Dimension(20, 20));
+        foregroundColorSwatch.setCornerRadius(4);
+        foregroundColorSwatch.setBorderEnabled(true);
+        controlPanel.add(foregroundColorSwatch, "14, 5, left, center");
 
         resetZoomButton = new JButton("Reset zoom");
         controlPanel.add(resetZoomButton, "2, 7");
@@ -192,8 +205,11 @@ public class ZoomableChartView extends JPanel {
         JLabel lblNewLabel_2 = new JLabel("Grid");
         controlPanel.add(lblNewLabel_2, "12, 7");
 
-        gridColorSwatch = new JColorSwatch();
-        controlPanel.add(gridColorSwatch, "14, 7");
+        gridColorSwatch = new ColorSwatch();
+        gridColorSwatch.setCornerRadius(4);
+        gridColorSwatch.setPreferredSize(new Dimension(20, 20));
+        gridColorSwatch.setBorderEnabled(true);
+        controlPanel.add(gridColorSwatch, "14, 7, left, center");
 
         // set defaults
         chart.setUseAntialiasing(true);

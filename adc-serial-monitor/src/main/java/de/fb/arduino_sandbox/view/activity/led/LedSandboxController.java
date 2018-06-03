@@ -33,6 +33,8 @@ public class LedSandboxController {
     private Supplier<RgbwColorGroups> configSupplier;
     private Consumer<RgbwColorGroups> configUpdater;
 
+    private List<RgbwPixel> previousLedData;
+
     @Autowired
     public LedSandboxController(final ApplicationContext appContext,
         final HardwareUplink arduinoLinkService,
@@ -58,6 +60,13 @@ public class LedSandboxController {
 
         final List<RgbwPixel> pixels = prepareLedData(colorGroups);
         hardwareUplink.sendRgbwPixels(pixels);
+    }
+
+    public void reInitLedConfiguration() {
+        if (previousLedData != null) {
+            hardwareUplink.resetPixels();
+            hardwareUplink.sendRgbwPixels(previousLedData);
+        }
     }
 
     public void loadConfiguration(final File inputFile) {
@@ -102,6 +111,7 @@ public class LedSandboxController {
                 pixels.add(pixel);
             }
         }
+        previousLedData = pixels;
         return pixels;
     }
 }

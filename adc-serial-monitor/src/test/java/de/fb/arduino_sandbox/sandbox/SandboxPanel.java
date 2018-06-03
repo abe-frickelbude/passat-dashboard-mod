@@ -21,7 +21,6 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import de.fb.arduino_sandbox.view.component.color.TinyButton;
 import de.fb.arduino_sandbox.view.component.color.TinyButtonGroup;
-import de.fb.arduino_sandbox.view.component.color_swatch.BiColorSwatch;
 import de.fb.arduino_sandbox.view.component.color_swatch.ColorSwatch;
 import de.fb.arduino_sandbox.view.component.dial.Dial;
 
@@ -46,7 +45,7 @@ public class SandboxPanel extends JPanel {
     private ColorSwatch colorSwatch_4;
     private ColorSwatch colorSwatch_5;
     private ColorSwatch colorSwatch_6;
-    private BiColorSwatch biColorSwatch_1;
+
     private TinyButton tinyButton;
     private ColorSwatch colorSwatch_7;
     private ColorSwatch colorSwatch_8;
@@ -146,10 +145,6 @@ public class SandboxPanel extends JPanel {
         colorSwatch_5.setCustomCursorEnabled(true);
         colorSwatch_5.setBorderEnabled(true);
         add(colorSwatch_5, "14, 4");
-
-        biColorSwatch_1 = new BiColorSwatch();
-        biColorSwatch_1.setBorderEnabled(true);
-        add(biColorSwatch_1, "4, 6, fill, fill");
 
         colorSwatch_7 = new ColorSwatch();
         colorSwatch_7.setCustomCursorEnabled(true);
@@ -284,6 +279,12 @@ public class SandboxPanel extends JPanel {
         dial_3.addChangeCallback(value -> log.info("Dial value: {}", value));
 
         add(dial_3, "16, 15");
+
+        colorSwatch_5.addChangeListener(event -> {
+
+            final Color color = colorSwatch_5.getColor();
+            colorSwatch_6.setColor(color);
+        });
 
     }
 

@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.swing.JColorChooser;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
@@ -265,11 +266,30 @@ public class ColorSwatch extends JComponent {
     }
 
     private void pickColor() {
-        final Color newColor = JColorChooser.showDialog(null, "Pick color", color);
-        if (newColor != null) {
-            setColor(newColor);
-            fireChangeEvent();
-        }
+
+        final JColorChooser chooser = new JColorChooser(getColor());
+
+        final JDialog dialog = JColorChooser.createDialog(null, "Pick color", true,
+            chooser,
+            event -> {
+                final Color newColor = chooser.getColor();
+                if (newColor != null) {
+                    setColor(newColor);
+                    fireChangeEvent();
+                }
+            },
+            null);
+
+        // support on-the-fly change events for the current color while the chooser dialog is still open
+        chooser.getSelectionModel().addChangeListener(event -> {
+            final Color newColor = chooser.getColor();
+            if (newColor != null) {
+                setColor(newColor);
+                fireChangeEvent();
+            }
+        });
+
+        dialog.setVisible(true);
     }
 
     private void showInfoDialog() {
