@@ -1,0 +1,6 @@
+# ignored KiCAD and backup files
+
+*-cache.lib
+*-rescue.lib
+*.kicad_pcb-bak
+*.bak
