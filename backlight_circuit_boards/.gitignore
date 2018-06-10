@@ -1,6 +1,8 @@
-# ignored KiCAD and backup files
+# ignored KiCAD, temporary and backup files
 
 *-cache.lib
 *-rescue.lib
 *.kicad_pcb-bak
 *.bak
+*.svg
+*.pdf
