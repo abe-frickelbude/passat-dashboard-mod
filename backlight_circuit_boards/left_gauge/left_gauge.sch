@@ -466,7 +466,7 @@ U 1 1 5B65D5E7
 P 850 1850
 F 0 "J1" H 850 2050 50  0000 C CNN
 F 1 "IN" H 850 1650 50  0000 C CNN
-F 2 "Pin_Headers:Pin_Header_Straight_1x03_Pitch2.54mm" H 850 1850 50  0001 C CNN
+F 2 "Frickelbude Connectors:wire_solder_pads_1x03_2.5x1.7mm_Pitch2.54mm" H 850 1850 50  0001 C CNN
 F 3 "" H 850 1850 50  0001 C CNN
 	1    850  1850
 	-1   0    0    1   
@@ -499,7 +499,7 @@ U 1 1 5B65DC37
 P 10450 1850
 F 0 "J2" H 10450 2050 50  0000 C CNN
 F 1 "OUT" H 10450 1650 50  0000 C CNN
-F 2 "Pin_Headers:Pin_Header_Straight_1x03_Pitch2.54mm" H 10450 1850 50  0001 C CNN
+F 2 "Frickelbude Connectors:wire_solder_pads_1x03_2.5x1.7mm_Pitch2.54mm" H 10450 1850 50  0001 C CNN
 F 3 "" H 10450 1850 50  0001 C CNN
 	1    10450 1850
 	1    0    0    -1  
@@ -684,4 +684,41 @@ Text Label 1350 1800 0    60   ~ 0
 SIG_IN
 Text Label 9650 1900 0    60   ~ 0
 SIG_OUT
+$Comp
+L power:GND #PWR0101
+U 1 1 5B72427E
+P 5350 6600
+F 0 "#PWR0101" H 5350 6350 50  0001 C CNN
+F 1 "GND" H 5355 6427 50  0000 C CNN
+F 2 "" H 5350 6600 50  0001 C CNN
+F 3 "" H 5350 6600 50  0001 C CNN
+	1    5350 6600
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:VCC #PWR0102
+U 1 1 5B725965
+P 5350 5950
+F 0 "#PWR0102" H 5350 5800 50  0001 C CNN
+F 1 "VCC" H 5367 6123 50  0000 C CNN
+F 2 "" H 5350 5950 50  0001 C CNN
+F 3 "" H 5350 5950 50  0001 C CNN
+	1    5350 5950
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:CP C7
+U 1 1 5B7259E9
+P 5350 6250
+F 0 "C7" H 5400 6350 50  0000 L CNN
+F 1 "10 uF" H 5400 6150 50  0000 L CNN
+F 2 "Capacitors_Tantalum_SMD:CP_Tantalum_Case-D_EIA-7343-31_Reflow" H 5388 6100 50  0001 C CNN
+F 3 "~" H 5350 6250 50  0001 C CNN
+	1    5350 6250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5350 5950 5350 6100
+Wire Wire Line
+	5350 6400 5350 6600
 $EndSCHEMATC
