@@ -4,5 +4,4 @@
 *-rescue.lib
 *.kicad_pcb-bak
 *.bak
-*.svg
 *.pdf
