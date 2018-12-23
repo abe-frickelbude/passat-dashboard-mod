@@ -10,4 +10,6 @@ public class PixelCommands {
     public static final byte RESET_PIXEL = 0x03;
     public static final byte RESET_ALL = 0x04;
     public static final byte SHOW_PIXELS = 0x05;
+    
+    public static final byte ANALOG_READ_SYSEX = 0x41;
 }

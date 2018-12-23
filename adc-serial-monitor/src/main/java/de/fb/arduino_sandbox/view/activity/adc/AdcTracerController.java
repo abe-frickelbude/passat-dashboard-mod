@@ -1,22 +1,34 @@
 package de.fb.arduino_sandbox.view.activity.adc;
 
-import java.util.*;
-import java.util.concurrent.atomic.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import javax.annotation.*;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.swing.JPanel;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
-import org.apache.commons.lang3.tuple.*;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import de.fb.arduino_sandbox.math.*;
 import de.fb.arduino_sandbox.service.HardwareUplink;
-import de.fb.arduino_sandbox.util.*;
+import de.fb.arduino_sandbox.util.AdcUtils;
+import de.fb.arduino_sandbox.util.ConcurrentCircularFifoQueue;
+import de.fb.arduino_sandbox.util.Constants;
+import de.fb.arduino_sandbox.util.TimeUtils;
 import de.fb.arduino_sandbox.view.TraceData;
-import de.fb.arduino_sandbox.view.activity.adc.filter.*;
+import de.fb.arduino_sandbox.view.activity.adc.filter.DoubleExponentialControlBox;
+import de.fb.arduino_sandbox.view.activity.adc.filter.KalmanControlBox;
+import de.fb.arduino_sandbox.view.activity.adc.filter.SimpleExponentialControlBox;
 import info.monitorenter.gui.chart.TracePoint2D;
 
 /**
@@ -31,7 +43,7 @@ public class AdcTracerController {
     private static final Logger log = LoggerFactory.getLogger(AdcTracerController.class);
 
     private static final int SAMPLE_BUFFER_SIZE = Constants.SAMPLE_BUFFER_SIZE;
-    private static final int INPUT_PIN = Constants.PIN_A0;
+    private static final int INPUT_PIN = Constants.PIN_A1;
 
     private final ApplicationContext appContext;
     private final HardwareUplink arduinoLinkService;
@@ -182,6 +194,9 @@ public class AdcTracerController {
 
                 if (nextSample != null) {
 
+                    // for debugging the ADC input
+                    TracePoint2D rawInputPoint = new TracePoint2D(currentTime, nextSample);
+
                     double voltageSample = AdcUtils.mapAdcSampleToVoltage(nextSample);
 
                     if (usePreFilterThreshold.get() == true) {
@@ -206,6 +221,7 @@ public class AdcTracerController {
 
                     final TraceData traceData = new TraceData();
 
+                    traceData.setRawInputPoint(rawInputPoint);
                     traceData.setInputPoint(inputPoint);
                     traceData.setFilteredPoint(filteredPoint);
 

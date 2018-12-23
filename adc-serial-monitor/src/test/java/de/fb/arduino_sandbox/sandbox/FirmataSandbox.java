@@ -4,24 +4,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.bortbort.arduino.FiloFirmata.Firmata;
 import com.bortbort.arduino.FiloFirmata.FirmataConfiguration;
+import com.bortbort.arduino.FiloFirmata.MessageListener;
+import com.bortbort.arduino.FiloFirmata.Messages.AnalogMessage;
+import com.bortbort.arduino.FiloFirmata.Messages.Message;
 import com.bortbort.arduino.FiloFirmata.Messages.SysexReportFirmwareMessage;
 import com.bortbort.arduino.FiloFirmata.Messages.SysexReportFirmwareQueryMessage;
-import de.fb.arduino_sandbox.service.firmata.ResetPixelsCommand;
-import de.fb.arduino_sandbox.service.firmata.SetNumPixelsCommand;
-import de.fb.arduino_sandbox.service.firmata.SetPixelCommand;
-import de.fb.arduino_sandbox.service.firmata.ShowPixelsCommand;
+import de.fb.arduino_sandbox.service.firmata.*;
 
 public class FirmataSandbox {
 
     private static final Logger log = LoggerFactory.getLogger(FirmataSandbox.class);
 
     private Firmata firmata;
+    
+    static {
+        Firmata.addCustomCommandParser(new FbAnalogMessageBuilder());
+        //Firmata.addCustomSysexParser(new FbAnalogMessageBuilder());
+    }
 
     public FirmataSandbox() {
 
         final FirmataConfiguration config = new FirmataConfiguration();
         config.setTestProtocolCommunication(false);
-        // config.setSerialPortBaudRate(57600);
+        config.setSerialPortID("COM4");
         config.setSerialPortBaudRate(115200);
         firmata = new Firmata(config);
     }
@@ -40,6 +45,35 @@ public class FirmataSandbox {
 
         log.info("Firmware: {}, {}.{}", message.getFirmwareName(), message.getMajorVersion(), message.getMinorVersion());
 
+        // testLedPixelCommands();
+        testAnalogInputMessages();
+
+        firmata.stop();
+    }
+
+    private void testAnalogInputMessages() {
+
+        MessageListener<Message> messageListener = new MessageListener<>() {
+            @Override
+            public void messageReceived(final Message message) {
+                if (message instanceof FbAnalogMessage) {
+                    log.info("Channel: {}, value: {}",
+                        FbAnalogMessage.class.cast(message).getChannelByte(),
+                        FbAnalogMessage.class.cast(message).getAnalogValue());
+                }
+            }
+        };
+
+        firmata.addMessageListener(messageListener);
+
+        try {
+            Thread.sleep(30000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void testLedPixelCommands() {
         // Test LED color transmission
 
         // for (int i = 0; i < 100; i++) {
@@ -97,8 +131,6 @@ public class FirmataSandbox {
         //
         // firmata.sendMessage(new ResetPixelsCommand());
         // }
-
-        firmata.stop();
     }
 
 }

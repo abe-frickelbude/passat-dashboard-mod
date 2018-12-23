@@ -3,11 +3,16 @@ package de.fb.arduino_sandbox.view.activity.adc;
 import java.awt.BorderLayout;
 import javax.annotation.PostConstruct;
 import javax.swing.*;
-import javax.swing.border.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-import com.jgoodies.forms.layout.*;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 import de.fb.arduino_sandbox.math.FilterType;
 
 @Component
@@ -20,6 +25,7 @@ public class AdcTracerControlPanel extends JPanel {
     private JComboBox<FilterType> filterSelectionBox;
     private JPanel filterControlPanel;
 
+    private JCheckBox showRawInputTraceBox;
     private JCheckBox showInputTraceCheckBox;
     private JCheckBox showRmsTraceCheckBox;
     private JCheckBox showFilteredTraceCheckBox;
@@ -98,6 +104,10 @@ public class AdcTracerControlPanel extends JPanel {
 
         showMaxTraceCheckBox.addActionListener(event -> {
             mainPanel.setMaxSignalTraceVisible(showMaxTraceCheckBox.isSelected());
+        });
+
+        showRawInputTraceBox.addActionListener(event -> {
+            mainPanel.setRawInputSignalTraceVisible(showRawInputTraceBox.isSelected());
         });
 
         preFilterThresholdCheckBox.addActionListener(event -> {
@@ -230,6 +240,8 @@ public class AdcTracerControlPanel extends JPanel {
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
         }));
 
         showInputTraceCheckBox = new JCheckBox("Show input trace");
@@ -262,6 +274,9 @@ public class AdcTracerControlPanel extends JPanel {
 
         showMaxTraceCheckBox = new JCheckBox("Show MAX trace");
         traceOptionPanel.add(showMaxTraceCheckBox, "2, 12");
+
+        showRawInputTraceBox = new JCheckBox("Show raw input trace");
+        traceOptionPanel.add(showRawInputTraceBox, "2, 14");
     }
 
     private void createButtons() {
