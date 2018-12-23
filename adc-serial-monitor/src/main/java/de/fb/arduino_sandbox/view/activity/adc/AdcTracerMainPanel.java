@@ -1,7 +1,9 @@
 package de.fb.arduino_sandbox.view.activity.adc;
 
-import java.awt.*;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import org.springframework.stereotype.Component;
 import de.fb.arduino_sandbox.util.Constants;
 import de.fb.arduino_sandbox.view.TraceData;
@@ -13,6 +15,7 @@ public class AdcTracerMainPanel extends JPanel {
 
     private ZoomableChartView chartView;
 
+    private ITrace2D rawInputSignalTrace;
     private ITrace2D inputSignalTrace;
     private ITrace2D filteredSignalTrace;
     private ITrace2D minSignalTrace;
@@ -26,6 +29,7 @@ public class AdcTracerMainPanel extends JPanel {
     public void updateChart(final TraceData traceData) {
 
         SwingUtilities.invokeLater(() -> {
+            rawInputSignalTrace.addPoint(traceData.getRawInputPoint());
             inputSignalTrace.addPoint(traceData.getInputPoint());
             filteredSignalTrace.addPoint(traceData.getFilteredPoint());
             minSignalTrace.addPoint(traceData.getMinPoint());
@@ -35,8 +39,16 @@ public class AdcTracerMainPanel extends JPanel {
     }
 
     public void clearChart() {
+        rawInputSignalTrace.removeAllPoints();
         inputSignalTrace.removeAllPoints();
         filteredSignalTrace.removeAllPoints();
+        minSignalTrace.removeAllPoints();
+        maxSignalTrace.removeAllPoints();
+        rmsSignalTrace.removeAllPoints();
+    }
+
+    public void setRawInputSignalTraceVisible(final boolean visible) {
+        rawInputSignalTrace.setVisible(visible);
     }
 
     public void setInputSignalTraceVisible(final boolean visible) {
@@ -72,6 +84,8 @@ public class AdcTracerMainPanel extends JPanel {
         chartView.setXaxisTitle("TIME, s", Color.WHITE);
         chartView.setYaxisTitle("VOLTAGE, V", Color.WHITE);
 
+        rawInputSignalTrace = chartView.addLtdTrace("raw ADC input", Color.RED, Constants.NUM_GRAPH_DATA_POINTS);
+
         inputSignalTrace = chartView.addLtdTrace("input signal", Color.CYAN, Constants.NUM_GRAPH_DATA_POINTS);
         filteredSignalTrace = chartView.addLtdTrace("filtered signal", Color.YELLOW, Constants.NUM_GRAPH_DATA_POINTS);
 
@@ -79,6 +93,7 @@ public class AdcTracerMainPanel extends JPanel {
         maxSignalTrace = chartView.addLtdTrace("max", Color.GREEN, Constants.NUM_GRAPH_DATA_POINTS, 99);
         rmsSignalTrace = chartView.addLtdTrace("RMS", Color.RED, Constants.NUM_GRAPH_DATA_POINTS, 99);
 
+        rawInputSignalTrace.setVisible(false);
         minSignalTrace.setVisible(false);
         maxSignalTrace.setVisible(false);
         rmsSignalTrace.setVisible(false);

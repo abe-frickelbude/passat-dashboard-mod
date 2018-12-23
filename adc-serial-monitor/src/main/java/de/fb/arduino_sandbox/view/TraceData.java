@@ -4,11 +4,22 @@ import info.monitorenter.gui.chart.ITracePoint2D;
 
 public class TraceData {
 
+    // used for debugging ADC input, can't be displayed with same axis scale as the other traces
+    private ITracePoint2D rawInputPoint;
+
     private ITracePoint2D inputPoint;
     private ITracePoint2D filteredPoint;
     private ITracePoint2D rmsPoint;
     private ITracePoint2D minPoint;
     private ITracePoint2D maxPoint;
+
+    public ITracePoint2D getRawInputPoint() {
+        return rawInputPoint;
+    }
+
+    public void setRawInputPoint(final ITracePoint2D rawInputPoint) {
+        this.rawInputPoint = rawInputPoint;
+    }
 
     public ITracePoint2D getInputPoint() {
         return inputPoint;
