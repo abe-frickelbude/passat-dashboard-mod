@@ -5,6 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <math.h>
 #include <Arduino.h>
 #include <Firmata.h>
 #include <SoftwareSerial.h>
@@ -20,6 +21,13 @@ const byte RESET_PIXEL = 0x03;
 const byte RESET_ALL = 0x04;
 const byte SHOW_PIXELS = 0x05;
 
+const byte ANALOG_READ_COMMAND = 0x41;
+
+// analog input
+const byte ANALOG_INPUT_PIN = PIN_A1;
+
+const float ADC_SCALING_FACTOR = 255.0f / 1023.0f;
+
 // --------------------- LED state ---------------------------
 
 // maximum allowed number of pixels
@@ -34,10 +42,13 @@ volatile int numPixels = 0;
 // used to watch for data modifications in the main loop
 volatile bool stateChanged = false;
 
-// SK6812 strip on PORT D, pin 6
-sk6812b<D, 6> strip;
+// SK6812 strip on PORT D, pin 2
+sk6812b<D, 2> strip;
 
 // ------------------------------------------------------------
+
+void sendAnalog(byte pin, uint16_t value);
+byte scaleAnalogValue(uint16_t value);
 
 void resetPixels();
 void setPixel(byte index, byte r, byte g, byte b, byte w);
@@ -49,14 +60,12 @@ void setup()
     Firmata.setFirmwareNameAndVersion("WS2812 Sandbox",
                                       FIRMATA_FIRMWARE_MAJOR_VERSION,
                                       FIRMATA_FIRMWARE_MINOR_VERSION);
+
     Firmata.attach(START_SYSEX, sysexCallback);
-    //Firmata.begin(57600); // ?! Can't use a previously defined uint16_t constant here!
     Firmata.begin(115200); // ?! Can't use a previously defined uint16_t constant here!
 
     pinMode(LED_BUILTIN, OUTPUT);
-
-    // strip.clear(2 * NUM_PIXELS); <<---- Causes shifting of pixels by the number
-    // of positions passed to this method!! WTF ?!
+    //pinMode(ANALOG_INPUT_PIN, INPUT);
 
     // initial reset
     strip.clear(NUM_PIXELS);
@@ -64,10 +73,16 @@ void setup()
 
 void loop()
 {
+    // process input commands
     while (Firmata.available())
     {
         Firmata.processInput();
     }
+
+    // update and send analog input(s)
+    //Firmata.sendAnalog(ANALOG_INPUT_PIN, scaleAnalogValue(analogRead(ANALOG_INPUT_PIN)));
+    Firmata.sendAnalog(ANALOG_INPUT_PIN, analogRead(ANALOG_INPUT_PIN));
+    //sendAnalog(ANALOG_INPUT_PIN, analogRead(ANALOG_INPUT_PIN));
 
     if (stateChanged)
     {
@@ -75,6 +90,21 @@ void loop()
         strip.sendPixels(numPixels, pixels);
         stateChanged = false;
     }
+}
+
+byte scaleAnalogValue(uint16_t value)
+{
+    return static_cast<byte>(value * ADC_SCALING_FACTOR);
+}
+
+void sendAnalog(byte pin, uint16_t value)
+{
+
+    Firmata.startSysex();
+    Firmata.write(ANALOG_READ_COMMAND);
+    Firmata.write(pin);
+    Firmata.sendValueAsTwo7bitBytes(value);
+    Firmata.endSysex();
 }
 
 void sysexCallback(byte command, byte argc, byte *argv)
