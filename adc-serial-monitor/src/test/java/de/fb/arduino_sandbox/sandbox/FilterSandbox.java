@@ -368,13 +368,13 @@ public class FilterSandbox {
         jitterField.setText(GuiUtils.formatDouble(MIN_JITTER));
 
         voltageSlider.addChangeListener(event -> {
-            double value = GuiUtils.interpolateFilterParam(voltageSlider.getValue(), MIN_VOLTAGE, MAX_VOLTAGE);
+            double value = GuiUtils.interpolateParam(voltageSlider.getValue(), MIN_VOLTAGE, MAX_VOLTAGE);
             voltageField.setText(GuiUtils.formatDouble(value));
             currentVoltage = value;
         });
 
         jitterSlider.addChangeListener(event -> {
-            double value = GuiUtils.interpolateFilterParam(jitterSlider.getValue(), MIN_JITTER, MAX_JITTER);
+            double value = GuiUtils.interpolateParam(jitterSlider.getValue(), MIN_JITTER, MAX_JITTER);
             jitterField.setText(GuiUtils.formatDouble(value));
             currentJitterMagnitude = value;
         });

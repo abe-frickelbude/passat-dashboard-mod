@@ -15,7 +15,7 @@ public final class GuiUtils {
     }
 
     // sliderValue is always assumed to be in range [0...SLIDER_TICKS]
-    public static double interpolateFilterParam(final int sliderValue, final double min, final double max) {
+    public static double interpolateParam(final int sliderValue, final double min, final double max) {
         double normSliderValue = 1.0 * sliderValue / SLIDER_TICKS;
         return min + normSliderValue * (max - min);
     }

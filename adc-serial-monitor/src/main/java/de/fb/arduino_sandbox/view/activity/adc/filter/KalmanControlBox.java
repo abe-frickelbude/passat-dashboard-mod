@@ -111,20 +111,20 @@ public class KalmanControlBox extends JPanel {
         errorFactorField.setText(formatDouble(INITIAL_ERROR_FACTOR));
 
         processNoiseSlider.addChangeListener(event -> {
-            double value = interpolateFilterParam(processNoiseSlider.getValue(), MIN_PROCESS_NOISE, MAX_PROCESS_NOISE);
+            double value = interpolateParam(processNoiseSlider.getValue(), MIN_PROCESS_NOISE, MAX_PROCESS_NOISE);
             processNoiseField.setText(formatDouble(value));
             filter.setProcessNoise(value);
         });
 
         measurementNoiseSlider.addChangeListener(event -> {
-            double value = interpolateFilterParam(measurementNoiseSlider.getValue(), MIN_MEASUREMENT_NOISE,
+            double value = interpolateParam(measurementNoiseSlider.getValue(), MIN_MEASUREMENT_NOISE,
                 MAX_MEASUREMENT_NOISE);
             measurementNoiseField.setText(formatDouble(value));
             filter.setMeasurementNoise(value);
         });
 
         errorFactorSlider.addChangeListener(event -> {
-            double value = interpolateFilterParam(errorFactorSlider.getValue(), MIN_ERROR_FACTOR, MAX_ERROR_FACTOR);
+            double value = interpolateParam(errorFactorSlider.getValue(), MIN_ERROR_FACTOR, MAX_ERROR_FACTOR);
             errorFactorField.setText(formatDouble(value));
             filter.setErrorFactor(value);
         });
