@@ -2,33 +2,30 @@ package de.fb.arduino_sandbox.pwm_simulator;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.UIManager;
-import javax.swing.WindowConstants;
+import java.awt.Dimension;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.bulenkov.darcula.DarculaLaf;
+import com.jgoodies.forms.layout.*;
 import de.fb.arduino_sandbox.util.GuiUtils;
 import de.fb.arduino_sandbox.view.component.ZoomableChartView;
 import info.monitorenter.gui.chart.ITrace2D;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JLabel;
-import java.awt.Dimension;
-import java.text.MessageFormat;
-import java.util.concurrent.TimeUnit;
-import com.jgoodies.forms.layout.FormSpecs;
-import javax.swing.JSlider;
-import com.jgoodies.forms.layout.Sizes;
 
 public class PulseWidthSimulator {
 
-    private static final int SAMPLING_RATE = 1000; // samples / sec
+    private static final Logger log = LoggerFactory.getLogger(PulseWidthSimulator.class);
 
-    private static final int MIN_FREQUENCY = 50;
+    private static final float INPUT_AMPLITUDE = 5.0f;
+
+    private static final int MIN_FREQUENCY = 80;
     private static final int MAX_FREQUENCY = 200;
-    private static final int MIN_DUTY_CYCLE = 20;
+
+    private static final int MIN_DUTY_CYCLE = 21;
     private static final int MAX_DUTY_CYCLE = 98;
 
     private static final float MIN_VOLTAGE = 12.0f;
@@ -36,6 +33,9 @@ public class PulseWidthSimulator {
 
     private static final float MIN_OFFSET = 0.0f;
     private static final float MAX_OFFSET = 10.0f;
+
+    private static final int MIN_TIME_BASE = 1000; // Hz (samples / sec)
+    private static final int MAX_TIME_BASE = 10000;
 
     // app instance
     private static PulseWidthSimulator app;
@@ -50,6 +50,8 @@ public class PulseWidthSimulator {
     private JSlider driftedWaveformOffsetSlider;
     private JSlider correctedWaveformOffsetSlider;
 
+    private JSlider timeBaseSlider;
+
     private JLabel frequencyLabel;
     private JLabel dutyCycleLabel;
     private JLabel inputVoltageLabel;
@@ -57,23 +59,32 @@ public class PulseWidthSimulator {
     private JLabel driftedOffsetLabel;
     private JLabel correctedOffsetLabel;
 
+    private JLabel timeBaseLabel;
+
     // state
     private int inputFrequency;
     private int inputDutyCycle;
-    private double inputVoltage;
+    private float inputVoltage;
 
-    private double inputWaveformOffset;
-    private double driftedWaveformOffset;
-    private double correctedWaveformOffset;
+    private float inputWaveformOffset;
+    private float driftedWaveformOffset;
+    private float correctedWaveformOffset;
+
+    private int samplingRate = MIN_TIME_BASE;
 
     private ITrace2D inputWaveformTrace;
     private ITrace2D driftedWaveformTrace;
     private ITrace2D correctedWaveformTrace;
 
+    private long prevSampleTime = 0;
+    private long currentSampleTime = 0;
+
+    private PwmSource inputSignalSource;
+    private JCheckBox generatorActiveCheckBox;
+
     public static void main(final String[] args) {
 
         try {
-            // UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             UIManager.setLookAndFeel(new DarculaLaf());
         } catch (Exception ex) {}
 
@@ -82,34 +93,59 @@ public class PulseWidthSimulator {
     }
 
     public PulseWidthSimulator() {
+        createData();
         createUI();
         connectEvents();
     }
 
     public void start() {
 
-        final Thread worker = createWorker();
-        worker.start();
+        final Thread uiUpdateWorker = createUiUpdateWorker();
+        uiUpdateWorker.start();
 
         // show UI
         mainWindow.setBounds(100, 100, 1024, 768);
         mainWindow.setVisible(true);
     }
 
-    private Thread createWorker() {
+    private void createData() {
 
-        final long sleepTime;
+        inputSignalSource = new PwmSource();
+        inputSignalSource.setClockFrequency(10000); // 10 Khz
+        inputSignalSource.setAmplitude(INPUT_AMPLITUDE);
+        inputSignalSource.setFrequency(MIN_FREQUENCY);
+        inputSignalSource.setDutyCycle(MIN_DUTY_CYCLE);
+
+        inputSignalSource.start();
+        inputSignalSource.setActive(true);
+    }
+
+    private Thread createUiUpdateWorker() {
 
         final Thread worker = new Thread(() -> {
             while (true) {
+             
 
-                // instead of Thread.sleep() we use a higher resolution method using System.nanoTime()
-                // busyWaitMicros(sleepTime);
+                //currentSampleTime = prevSampleTime + sleepTime;
+                //updateData(prevSampleTime, currentSampleTime);
+                
+                updateData(currentSampleTime);
+                
+                currentSampleTime++;
+                
+                // convert sampling rate from Hz to delay in microseconds
+                final long sleepTime = Math.round((1.0 / samplingRate) * 1E6);
+                busyWaitMicros(sleepTime);
+
+                // update previous sample timestamp
+                //prevSampleTime = currentSampleTime;
             }
         });
         return worker;
     }
 
+    // instead of Thread.sleep() we use a higher resolution method using System.nanoTime()
+    // taken from here: http://www.rationaljava.com/2015/10/measuring-microsecond-in-java.html
     private void busyWaitMicros(final long micros) {
         final long waitUntil = System.nanoTime() + (micros * 1000);
         while (waitUntil > System.nanoTime()) {
@@ -117,32 +153,72 @@ public class PulseWidthSimulator {
         }
     }
 
-    // public static void createSampleGenerator(final ITrace2D trace, final ITrace2D trace2) {
-    //
-    // final Thread generator = new Thread(() -> {
-    //
-    // final long startTime = System.currentTimeMillis();
-    // while (true) {
-    //
-    // double timeValue = 0.001 * (System.currentTimeMillis() - startTime);
-    // double carrier = Math.sin(2 * Math.PI * CARRIER_FREQUENCY * timeValue);
-    // double envelope = Math.sin(2 * Math.PI * MODULATION_FREQUENCY * timeValue);
-    //
-    // trace.addPoint(timeValue, carrier);
-    // trace2.addPoint(timeValue, envelope);
-    //
-    // try {
-    // Thread.sleep(SAMPLE_PERIOD);
-    // } catch (InterruptedException ex) {
-    // Thread.currentThread().interrupt();
-    // }
-    // }
-    // });
-    // generator.start();
-    // }
+    private void updateData() {
 
-    private void processData() {
+        SwingUtilities.invokeLater(() -> {
 
+            long timestamp = 0;
+            final long step = Math.round((1.0 / samplingRate) * 1E6);
+
+            // input waveform
+            inputWaveformTrace.removeAllPoints();
+
+            inputSignalSource.setActive(false);
+            inputSignalSource.reset();
+
+            inputSignalSource.setActive(true);
+
+            for (int i = 0; i < samplingRate; i++) {
+
+                float sample = inputSignalSource.getValue();
+
+                sample += inputWaveformOffset; // add DC offset (if any)
+                inputWaveformTrace.addPoint(timestamp, sample);
+
+                // driftedWaveformTrace.addPoint(timestamp, inputSignalSource.getPhase());
+                timestamp += step;
+
+                // log.info("{}, {} -> {}", i, timestamp, sample);
+            }
+
+            inputSignalSource.setActive(false);
+
+            // simulated drifted waveform
+        });
+    }
+
+    private void updateData(final long timeStamp) {
+
+        SwingUtilities.invokeLater(() -> {
+
+            double inputWaveformSample = 0;
+            double driftedWaveformSample = 0;
+            double correctedWaveformSample = 0;
+
+            // calculate samples
+            inputWaveformSample = inputSignalSource.getValue();
+
+            // offset waveforms using values from sliders
+            inputWaveformSample += inputWaveformOffset;
+            driftedWaveformSample += driftedWaveformOffset;
+            correctedWaveformSample += correctedWaveformOffset;
+
+            // update graphs
+            //long timeStamp = currentSampleTime;
+            // long timeStamp = currentSampleTime % sampleWindowWidth;
+            //
+            // if (timeStamp == 0) {
+            // inputWaveformTrace.removeAllPoints();
+            // driftedWaveformTrace.removeAllPoints();
+            // correctedWaveformTrace.removeAllPoints();
+            // }
+
+            inputWaveformTrace.addPoint(timeStamp, inputWaveformSample);
+            // driftedWaveformTrace.addPoint(timeStamp, inputSignalSource.getPhase());
+
+            // driftedWaveformTrace.addPoint(timeStamp, driftedWaveformSample);
+            // correctedWaveformTrace.addPoint(timeStamp, correctedWaveformSample);
+        });
     }
 
     private void createUI() {
@@ -170,9 +246,9 @@ public class PulseWidthSimulator {
         chartView.setXaxisTitle("time", Color.YELLOW);
         chartView.setYaxisTitle("voltage", Color.YELLOW);
 
-        inputWaveformTrace = chartView.addLtdTrace("input", Color.CYAN, 400);
-        driftedWaveformTrace = chartView.addLtdTrace("drifted", Color.YELLOW, 400);
-        correctedWaveformTrace = chartView.addLtdTrace("corrected", Color.GREEN, 400);
+        inputWaveformTrace = chartView.addLtdTrace("input", Color.CYAN, 1000);
+        driftedWaveformTrace = chartView.addLtdTrace("drifted", Color.YELLOW, 1000);
+        correctedWaveformTrace = chartView.addLtdTrace("corrected", Color.GREEN, 1000);
 
         contentPane.add(chartView, BorderLayout.CENTER);
     }
@@ -180,7 +256,7 @@ public class PulseWidthSimulator {
     private JPanel createControls() {
 
         final JPanel controlPanel = new JPanel();
-        controlPanel.setPreferredSize(new Dimension(250, 100));
+        controlPanel.setPreferredSize(new Dimension(270, 100));
 
         controlPanel.setLayout(new FormLayout(new ColumnSpec[] {
             FormSpecs.RELATED_GAP_COLSPEC,
@@ -191,6 +267,22 @@ public class PulseWidthSimulator {
             FormSpecs.RELATED_GAP_COLSPEC,
         },
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -259,7 +351,7 @@ public class PulseWidthSimulator {
         inputVoltageLabel = new JLabel(String.valueOf(MIN_VOLTAGE));
         controlPanel.add(inputVoltageLabel, "4, 16, left, default");
 
-        JLabel lblNewLabel_3 = new JLabel("Input waveform offset");
+        JLabel lblNewLabel_3 = new JLabel("Input waveform DC offset");
         controlPanel.add(lblNewLabel_3, "2, 20");
 
         inputWaveformOffsetSlider = GuiUtils.makeSlider();
@@ -268,7 +360,7 @@ public class PulseWidthSimulator {
         inputOffsetLabel = new JLabel("0.0");
         controlPanel.add(inputOffsetLabel, "4, 22");
 
-        JLabel lblNewLabel_4 = new JLabel("Drifting waveform offset");
+        JLabel lblNewLabel_4 = new JLabel("Drifting waveform DC offset");
         controlPanel.add(lblNewLabel_4, "2, 26");
 
         driftedWaveformOffsetSlider = GuiUtils.makeSlider();
@@ -277,7 +369,7 @@ public class PulseWidthSimulator {
         driftedOffsetLabel = new JLabel("0.0");
         controlPanel.add(driftedOffsetLabel, "4, 28");
 
-        JLabel lblNewLabel_5 = new JLabel("Corrected waveform offset");
+        JLabel lblNewLabel_5 = new JLabel("Corrected waveform DC offset");
         controlPanel.add(lblNewLabel_5, "2, 32");
 
         correctedWaveformOffsetSlider = GuiUtils.makeSlider();
@@ -285,6 +377,22 @@ public class PulseWidthSimulator {
 
         correctedOffsetLabel = new JLabel("0.0");
         controlPanel.add(correctedOffsetLabel, "4, 34");
+
+        JLabel lblNewLabel_6 = new JLabel("Time base, Hz");
+        controlPanel.add(lblNewLabel_6, "2, 44");
+
+        timeBaseSlider = new JSlider();
+        timeBaseSlider.setMinimum(MIN_TIME_BASE);
+        timeBaseSlider.setMaximum(MAX_TIME_BASE);
+        timeBaseSlider.setValue(MIN_TIME_BASE);
+        controlPanel.add(timeBaseSlider, "2, 46");
+
+        timeBaseLabel = new JLabel(String.valueOf(MIN_TIME_BASE));
+        controlPanel.add(timeBaseLabel, "4, 46");
+
+        generatorActiveCheckBox = new JCheckBox("Generator clock active");
+        generatorActiveCheckBox.setSelected(true);
+        controlPanel.add(generatorActiveCheckBox, "2, 50");
         return controlPanel;
     }
 
@@ -293,31 +401,51 @@ public class PulseWidthSimulator {
         frequencySlider.addChangeListener(event -> {
             inputFrequency = frequencySlider.getValue();
             frequencyLabel.setText(String.valueOf(inputFrequency));
+            inputSignalSource.setFrequency(inputFrequency);
+            updateData();
         });
 
         dutyCycleSlider.addChangeListener(event -> {
             inputDutyCycle = dutyCycleSlider.getValue();
             dutyCycleLabel.setText(String.valueOf(inputDutyCycle));
+            inputSignalSource.setDutyCycle(inputDutyCycle);
+            updateData();
         });
 
         inputVoltageSlider.addChangeListener(event -> {
-            inputVoltage = GuiUtils.interpolateParam(inputVoltageSlider.getValue(), MIN_VOLTAGE, MAX_VOLTAGE);
+            inputVoltage = (float) GuiUtils.interpolateParam(inputVoltageSlider.getValue(), MIN_VOLTAGE, MAX_VOLTAGE);
             inputVoltageLabel.setText(MessageFormat.format("{0,number,#.##}", inputVoltage));
+            updateData();
         });
 
         inputWaveformOffsetSlider.addChangeListener(event -> {
-            inputWaveformOffset = GuiUtils.interpolateParam(inputWaveformOffsetSlider.getValue(), MIN_OFFSET, MAX_OFFSET);
+            inputWaveformOffset = (float) GuiUtils.interpolateParam(inputWaveformOffsetSlider.getValue(), MIN_OFFSET, MAX_OFFSET);
             inputOffsetLabel.setText(MessageFormat.format("{0,number,#.##}", inputWaveformOffset));
+            updateData();
         });
 
         driftedWaveformOffsetSlider.addChangeListener(event -> {
-            driftedWaveformOffset = GuiUtils.interpolateParam(driftedWaveformOffsetSlider.getValue(), MIN_OFFSET, MAX_OFFSET);
+            driftedWaveformOffset = (float) GuiUtils.interpolateParam(driftedWaveformOffsetSlider.getValue(), MIN_OFFSET,
+                MAX_OFFSET);
             driftedOffsetLabel.setText(MessageFormat.format("{0,number,#.##}", driftedWaveformOffset));
+            updateData();
         });
 
         correctedWaveformOffsetSlider.addChangeListener(event -> {
-            correctedWaveformOffset = GuiUtils.interpolateParam(correctedWaveformOffsetSlider.getValue(), MIN_OFFSET, MAX_OFFSET);
+            correctedWaveformOffset = (float) GuiUtils.interpolateParam(correctedWaveformOffsetSlider.getValue(), MIN_OFFSET,
+                MAX_OFFSET);
             correctedOffsetLabel.setText(MessageFormat.format("{0,number,#.##}", correctedWaveformOffset));
+            updateData();
+        });
+
+        timeBaseSlider.addChangeListener(event -> {
+            samplingRate = timeBaseSlider.getValue();
+            timeBaseLabel.setText(String.valueOf(samplingRate));
+            updateData();
+        });
+
+        generatorActiveCheckBox.addChangeListener(event -> {
+            inputSignalSource.setActive(generatorActiveCheckBox.isSelected());
         });
     }
 }

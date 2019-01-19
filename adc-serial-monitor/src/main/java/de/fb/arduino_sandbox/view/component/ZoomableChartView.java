@@ -22,6 +22,8 @@ import info.monitorenter.gui.chart.ITrace2D;
 import info.monitorenter.gui.chart.ZoomableChart;
 import info.monitorenter.gui.chart.axistitlepainters.AxisTitlePainterDefault;
 import info.monitorenter.gui.chart.traces.Trace2DLtd;
+import info.monitorenter.gui.chart.traces.Trace2DLtdReplacing;
+import info.monitorenter.gui.chart.traces.Trace2DReplacing;
 
 public class ZoomableChartView extends JPanel {
 
@@ -50,6 +52,22 @@ public class ZoomableChartView extends JPanel {
     public ITrace2D addLtdTrace(final String name, final Color color, final int numDataPoints, final int... zIndex) {
 
         final ITrace2D trace = new Trace2DLtd(numDataPoints, name);
+        trace.setColor(color);
+
+        traces.put(name, trace);
+        chart.addTrace(trace);
+        traceSelectionBox.addItem(name);
+
+        // has to be called AFTER a trace has been attached to a chart, otherwise setZIndex() will throw a tantrum...
+        if (ArrayUtils.isNotEmpty(zIndex)) {
+            trace.setZIndex(zIndex[0]);
+        }
+        return trace;
+    }
+
+    public ITrace2D addReplacingTrace(final String name, final Color color, final int numDataPoints, final int... zIndex) {
+
+        final ITrace2D trace = new ReplacingLtdTrace2D(numDataPoints, name);
         trace.setColor(color);
 
         traces.put(name, trace);
@@ -164,7 +182,7 @@ public class ZoomableChartView extends JPanel {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.PREF_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-        }));
+            }));
 
         showXaxisCheckBox = new JCheckBox("X axis");
         controlPanel.add(showXaxisCheckBox, "2, 3");
