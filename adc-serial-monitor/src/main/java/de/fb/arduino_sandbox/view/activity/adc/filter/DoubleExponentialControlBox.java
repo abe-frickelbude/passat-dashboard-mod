@@ -84,7 +84,7 @@ public class DoubleExponentialControlBox extends JPanel {
 
         smoothingFactorSlider.addChangeListener(event -> {
 
-            double value = interpolateFilterParam(smoothingFactorSlider.getValue(), MIN_SMOOTHING_FACTOR, MAX_SMOOTHING_FACTOR);
+            double value = interpolateParam(smoothingFactorSlider.getValue(), MIN_SMOOTHING_FACTOR, MAX_SMOOTHING_FACTOR);
             smoothingFactorField.setText(formatDouble(value));
             filter.setSmoothingFactor(value);
         });
@@ -107,7 +107,7 @@ public class DoubleExponentialControlBox extends JPanel {
 
         trendSmoothingFactorSlider.addChangeListener(event -> {
 
-            double value = interpolateFilterParam(
+            double value = interpolateParam(
                 trendSmoothingFactorSlider.getValue(), MIN_SMOOTHING_FACTOR, MAX_SMOOTHING_FACTOR);
 
             trendSmoothingFactorField.setText(formatDouble(value));

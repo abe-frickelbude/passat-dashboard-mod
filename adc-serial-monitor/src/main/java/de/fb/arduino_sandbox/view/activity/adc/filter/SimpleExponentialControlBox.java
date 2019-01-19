@@ -57,7 +57,7 @@ public class SimpleExponentialControlBox extends JPanel {
 
         smoothingFactorSlider.addChangeListener(event -> {
 
-            double value = interpolateFilterParam(smoothingFactorSlider.getValue(), MIN_SMOOTHING_FACTOR, MAX_SMOOTHING_FACTOR);
+            double value = interpolateParam(smoothingFactorSlider.getValue(), MIN_SMOOTHING_FACTOR, MAX_SMOOTHING_FACTOR);
             smoothingFactorField.setText(formatDouble(value));
             filter.setSmoothingFactor(value);
         });
